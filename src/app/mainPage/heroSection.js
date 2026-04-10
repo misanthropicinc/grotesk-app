@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import "./heroSection.css";
 
@@ -24,36 +24,44 @@ const heroImages = [
 ];
 
 export default function HeroSection() {
-  const [state, setState] = useState({
-    images: heroImages,
-    currentIndex: 0,
-  });
-
-  useEffect(() => {
-    setState({
-      images: shuffleArray(heroImages),
-      currentIndex: Math.floor(Math.random() * heroImages.length),
-    });
-  }, []);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isSticky, setIsSticky] = useState(false);
+  const headerRef = useRef(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setState((prev) => ({
-        ...prev,
-        currentIndex: (prev.currentIndex + 1) % prev.images.length,
-      }));
+      setCurrentIndex((prev) => (prev + 1) % heroImages.length);
     }, 3000);
 
     return () => clearInterval(interval);
   }, []);
 
+  const handleScroll = () => {
+    console.log("SCROLL FIRED");
+    const header = headerRef.current;
+    if (!header) return;
+    
+    const rect = header.getBoundingClientRect();
+    const shouldBeSticky = rect.top <= 0;
+    setIsSticky(shouldBeSticky);
+  };
+
+  useEffect(() => {
+    console.log("ADDING SCROLL LISTENER");
+    window.addEventListener("scroll", handleScroll, { passive: true, capture: true });
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll, { capture: true });
+    };
+  }, []);
+
   return (
     <section className="hero">
       <div className="imageContainer">
-        {state.images.map((src, index) => (
+        {heroImages.map((src, index) => (
           <div
             key={src}
-            className={`slide ${index === state.currentIndex ? "active" : ""}`}
+            className={`slide ${index === currentIndex ? "active" : ""}`}
           >
             <Image
               src={src}
@@ -66,6 +74,14 @@ export default function HeroSection() {
           </div>
         ))}
       </div>
+      <header
+        ref={headerRef}
+        className={`heroHeader ${isSticky ? "sticky" : ""}`}
+      >
+        <div className="header-left">MENSWEAR</div>
+        <div className="header-center">GROTESK</div>
+        <div className="header-right">SEARCH</div>
+      </header>
     </section>
   );
 }
