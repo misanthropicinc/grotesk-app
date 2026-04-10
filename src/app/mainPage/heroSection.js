@@ -36,21 +36,20 @@ export default function HeroSection() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleScroll = () => {
+  useEffect(() => {
     const header = headerRef.current;
     if (!header) return;
-    
-    const headerRect = header.getBoundingClientRect();
-    const shouldBeSticky = headerRect.top <= 0;
-    
-    if (isSticky && headerRect.top >= 0) {
-      setIsSticky(false);
-    } else if (!isSticky && headerRect.top <= 0) {
-      setIsSticky(true);
-    }
-  };
 
-  useEffect(() => {
+    const handleScroll = () => {
+      const headerRect = header.getBoundingClientRect();
+      
+      if (headerRect.top <= 0 && !isSticky) {
+        setIsSticky(true);
+      } else if (headerRect.top >= 0 && isSticky) {
+        setIsSticky(false);
+      }
+    };
+
     window.addEventListener("scroll", handleScroll, { passive: true, capture: true });
     
     return () => {
