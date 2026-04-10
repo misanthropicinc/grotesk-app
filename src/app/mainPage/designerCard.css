@@ -1,8 +1,52 @@
 .designerCard {
+  position: relative;
   width: calc(100% / 3);
   height: 100vh;
-  background-size: cover;
-  background-repeat: no-repeat;
   border: 1px solid #101010;
-  background-image: url(../../../public/imgs/designerGifs/maison-martin-margiela-matthias-brown-gif-by-traceloops-find.gif);
+  overflow: hidden;
+}
+
+.designerCard video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.designerCard .overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0);
+  transition: background 0.3s ease;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.designerCard p {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.designerCard:hover .overlay {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.designerCard:hover p {
+  opacity: 1;
 }
