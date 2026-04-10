@@ -3,18 +3,21 @@ import { useRef, useEffect } from "react";
 
 export default function DesignerCard({ id, isHovered, isAnyHovered, onHover, onLeave, imgSrc }) {
   const videoRef = useRef(null);
-  const wasHovered = useRef(false);
 
   useEffect(() => {
-    if (videoRef.current) {
-      if (isAnyHovered && !isHovered) {
-        videoRef.current.pause();
-        wasHovered.current = false;
-      } else if (!isAnyHovered && !wasHovered.current && videoRef.current.paused) {
-        videoRef.current.play().catch(() => {});
-        wasHovered.current = false;
-      } else if (isHovered && !wasHovered.current) {
-        wasHovered.current = true;
+    if (!videoRef.current) return;
+    
+    const video = videoRef.current;
+    
+    if (isHovered) {
+      if (video.paused) {
+        video.play().catch(() => {});
+      }
+    } else if (isAnyHovered && !isHovered) {
+      video.pause();
+    } else if (!isAnyHovered) {
+      if (video.paused) {
+        video.play().catch(() => {});
       }
     }
   }, [isAnyHovered, isHovered]);
