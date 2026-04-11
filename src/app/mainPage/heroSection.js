@@ -1,42 +1,54 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useReducer } from "react";
 import Image from "next/image";
 import "./heroSection.css";
 import "../header.css";
 import logoImg from "../../imgs/grotesk-header-logo.png";
 
-const shuffleArray = (array) => {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+function shuffleImages(images) {
+  return [...images].sort(() => Math.random() - 0.5);
+}
+
+const initialState = { images: [], currentIndex: 0, isSticky: false };
+
+function reducer(state, action) {
+  switch (action.type) {
+    case "init":
+      return { ...state, images: shuffleImages(action.payload) };
+    case "next":
+      return { ...state, currentIndex: (state.currentIndex + 1) % state.images.length };
+    case "sticky":
+      return { ...state, isSticky: action.payload };
+    default:
+      return state;
   }
-  return shuffled;
-};
+}
 
-const heroImages = [
-  "/imgs/hero/heroERD.png",
-  "/imgs/hero/heroGivenchy.png",
-  "/imgs/hero/heroCDG1.png",
-  "/imgs/hero/heroCDG2.png",
-  "/imgs/hero/heroRick.png",
-  "/imgs/hero/heroRick2.png",
-  "/imgs/hero/heroRS.png",
-];
-
-export default function HeroSection() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isSticky, setIsSticky] = useState(false);
+export default function HeroSection({ heroImages = [] }) {
+  const [state, dispatch] = useReducer(reducer, {
+    ...initialState,
+    images: heroImages,
+  });
   const headerRef = useRef(null);
+  const isFirstRender = useRef(true);
+  const isSticky = useRef(false);
+
+  // Shuffle images only on first render to avoid hydration mismatch
+  useEffect(() => {
+    if (heroImages.length > 0 && isFirstRender.current) {
+      isFirstRender.current = false;
+      dispatch({ type: "init", payload: heroImages });
+    }
+  }, [heroImages]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % heroImages.length);
+      dispatch({ type: "next" });
     }, 3000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [state.images]);
 
   useEffect(() => {
     const header = headerRef.current;
@@ -45,30 +57,29 @@ export default function HeroSection() {
     const handleScroll = () => {
       const headerRect = header.getBoundingClientRect();
 
-      if (headerRect.top <= 0 && !isSticky) {
-        setIsSticky(true);
-      } else if (headerRect.top >= 0 && isSticky) {
-        setIsSticky(false);
+      if (headerRect.top <= 0 && !isSticky.current) {
+        isSticky.current = true;
+        dispatch({ type: "sticky", payload: true });
+      } else if (headerRect.top >= 0 && isSticky.current) {
+        isSticky.current = false;
+        dispatch({ type: "sticky", payload: false });
       }
     };
 
-    window.addEventListener("scroll", handleScroll, {
-      passive: true,
-      capture: true,
-    });
+    window.addEventListener("scroll", handleScroll, { passive: true, capture: true });
 
     return () => {
       window.removeEventListener("scroll", handleScroll, { capture: true });
     };
-  }, [isSticky]);
+  }, []);
 
   return (
     <section className="hero">
       <div className="imageContainer">
-        {heroImages.map((src, index) => (
+        {state.images.length > 0 ? state.images.map((src, index) => (
           <div
             key={src}
-            className={`slide ${index === currentIndex ? "active" : ""}`}
+            className={`slide ${index === state.currentIndex ? "active" : ""}`}
           >
             <Image
               src={src}
@@ -77,13 +88,31 @@ export default function HeroSection() {
               priority={index === 0}
               sizes="100vw"
               className="image"
+              unoptimized
+              suppressHydrationWarning
+            />
+          </div>
+        )) : heroImages.map((src, index) => (
+          <div
+            key={src}
+            className={`slide ${index === state.currentIndex ? "active" : ""}`}
+          >
+            <Image
+              src={src}
+              alt={`Hero slide ${index + 1}`}
+              fill
+              priority={index === 0}
+              sizes="100vw"
+              className="image"
+              unoptimized
+              suppressHydrationWarning
             />
           </div>
         ))}
       </div>
       <header
         ref={headerRef}
-        className={`heroHeader ${isSticky ? "sticky" : ""}`}
+        className={`heroHeader ${state.isSticky ? "sticky" : "visible"}`}
       >
         <nav>
           <a className="grotesk-header-logo">
