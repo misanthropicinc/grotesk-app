@@ -10,4 +10,6 @@ body {
   height: 100%;
   overflow-x: hidden;
   font-family: var(--font-gotham), sans-serif;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
 }

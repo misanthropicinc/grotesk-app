@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import "./heroSection.css";
+import "../header.css";
+import logoImg from "../../imgs/grotesk-header-logo.png";
 
 const shuffleArray = (array) => {
   const shuffled = [...array];
@@ -42,7 +44,7 @@ export default function HeroSection() {
 
     const handleScroll = () => {
       const headerRect = header.getBoundingClientRect();
-      
+
       if (headerRect.top <= 0 && !isSticky) {
         setIsSticky(true);
       } else if (headerRect.top >= 0 && isSticky) {
@@ -50,8 +52,11 @@ export default function HeroSection() {
       }
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true, capture: true });
-    
+    window.addEventListener("scroll", handleScroll, {
+      passive: true,
+      capture: true,
+    });
+
     return () => {
       window.removeEventListener("scroll", handleScroll, { capture: true });
     };
@@ -80,9 +85,24 @@ export default function HeroSection() {
         ref={headerRef}
         className={`heroHeader ${isSticky ? "sticky" : ""}`}
       >
-        <div className="header-left">MENSWEAR</div>
-        <div className="header-center">GROTESK</div>
-        <div className="header-right">SEARCH</div>
+        <nav>
+          <a className="grotesk-header-logo">
+              <Image
+                src={logoImg}
+                width={71}
+                height={19}
+                alt="logo"
+              />
+            </a>
+          <div className="header-left">
+            <a>MENSWEAR</a>
+            <a>WOMENSWEAR</a>
+            <a>SNEAKERS</a>
+            <a>DESIGNERS</a>
+            <a>ABOUT</a>
+            <a>GITHUB</a>
+          </div>
+        </nav>
       </header>
     </section>
   );
