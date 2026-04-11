@@ -35,6 +35,7 @@ export default function HeroSection({ heroImages = [] }) {
     images: heroImages,
   });
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeBtn, setActiveBtn] = useState(null);
   const headerRef = useRef(null);
   const isFirstRender = useRef(true);
   const isSticky = useRef(false);
@@ -131,78 +132,101 @@ export default function HeroSection({ heroImages = [] }) {
             </a>
             <div className="header-left">
               <div className="nav1left">
-                <div
-                  className="header-btn"
-                  onClick={() => setMenuOpen(!menuOpen)}
-                >
-                  <a>MENSWEAR</a>
-                  <svg
-                    className="header-icn"
-                    width="7"
-                    height="6"
-                    viewBox="0 0 7 6"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
+                <div className="nav-btns">
+                  <div
+                    className="header-btn"
+                    onClick={() => {
+                      setActiveBtn(activeBtn === "menswear" ? null : "menswear");
+                      setMenuOpen(!menuOpen);
+                    }}
                   >
-                    <path
-                      d="M3.03113 5.25L3.95596e-05 -5.70966e-07L6.06222 -4.09935e-08L3.03113 5.25Z"
-                      fill="#EFEFEF"
-                    />
-                  </svg>
-                </div>
-                <div className="header-btn">
-                  <a>WOMENSWEAR</a>
-                  <svg
-                    className="header-icn"
-                    width="7"
-                    height="6"
-                    viewBox="0 0 7 6"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
+                    <a>MENSWEAR</a>
+                    <svg
+                      className={`header-icn ${activeBtn === "menswear" && menuOpen ? "flipped" : ""}`}
+                      width="7"
+                      height="6"
+                      viewBox="0 0 7 6"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M3.03113 5.25L3.95596e-05 -5.70966e-07L6.06222 -4.09935e-08L3.03113 5.25Z"
+                        fill="#EFEFEF"
+                      />
+                    </svg>
+                  </div>
+                  <div
+                    className="header-btn"
+                    onClick={() => {
+                      setActiveBtn(activeBtn === "womenswear" ? null : "womenswear");
+                      setMenuOpen(!menuOpen);
+                    }}
                   >
-                    <path
-                      d="M3.03113 5.25L3.95596e-05 -5.70966e-07L6.06222 -4.09935e-08L3.03113 5.25Z"
-                      fill="#EFEFEF"
-                    />
-                  </svg>
-                </div>
-                <div className="header-btn">
-                  <a>SNEAKERS</a>
-                  <svg
-                    className="header-icn"
-                    width="7"
-                    height="6"
-                    viewBox="0 0 7 6"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
+                    <a>WOMENSWEAR</a>
+                    <svg
+                      className={`header-icn ${activeBtn === "womenswear" && menuOpen ? "flipped" : ""}`}
+                      width="7"
+                      height="6"
+                      viewBox="0 0 7 6"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M3.03113 5.25L3.95596e-05 -5.70966e-07L6.06222 -4.09935e-08L3.03113 5.25Z"
+                        fill="#EFEFEF"
+                      />
+                    </svg>
+                  </div>
+                  <div
+                    className="header-btn"
+                    onClick={() => {
+                      setActiveBtn(activeBtn === "sneakers" ? null : "sneakers");
+                      setMenuOpen(!menuOpen);
+                    }}
                   >
-                    <path
-                      d="M3.03113 5.25L3.95596e-05 -5.70966e-07L6.06222 -4.09935e-08L3.03113 5.25Z"
-                      fill="#EFEFEF"
-                    />
-                  </svg>
-                </div>
-                <div className="header-btn">
-                  <a>DESIGNERS</a>
-                  <svg
-                    className="header-icn"
-                    width="7"
-                    height="6"
-                    viewBox="0 0 7 6"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
+                    <a>SNEAKERS</a>
+                    <svg
+                      className={`header-icn ${activeBtn === "sneakers" && menuOpen ? "flipped" : ""}`}
+                      width="7"
+                      height="6"
+                      viewBox="0 0 7 6"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M3.03113 5.25L3.95596e-05 -5.70966e-07L6.06222 -4.09935e-08L3.03113 5.25Z"
+                        fill="#EFEFEF"
+                      />
+                    </svg>
+                  </div>
+                  <div
+                    className="header-btn"
+                    onClick={() => {
+                      setActiveBtn(activeBtn === "designers" ? null : "designers");
+                      setMenuOpen(!menuOpen);
+                    }}
                   >
-                    <path
-                      d="M3.03113 5.25L3.95596e-05 -5.70966e-07L6.06222 -4.09935e-08L3.03113 5.25Z"
-                      fill="#EFEFEF"
-                    />
-                  </svg>
+                    <a>DESIGNERS</a>
+                    <svg
+                      className={`header-icn ${activeBtn === "designers" && menuOpen ? "flipped" : ""}`}
+                      width="7"
+                      height="6"
+                      viewBox="0 0 7 6"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M3.03113 5.25L3.95596e-05 -5.70966e-07L6.06222 -4.09935e-08L3.03113 5.25Z"
+                        fill="#EFEFEF"
+                      />
+                    </svg>
+                  </div>
                 </div>
                 <a>ABOUT</a>
                 <a href="https://github.com/misanthropicinc">GITHUB</a>
               </div>
               <span className="border-nav"></span>
-              <div className="icon-btns">
+              <div className="nav-btns">
                 <a href="#">
                   <svg
                     className="header-icn"
@@ -276,7 +300,7 @@ export default function HeroSection({ heroImages = [] }) {
             </div>
           </nav>
           {menuOpen && (
-            <HeaderMenu isOpen={menuOpen} isSticky={state.isSticky} />
+            <HeaderMenu isOpen={menuOpen} isSticky={state.isSticky} onClose={() => setMenuOpen(false)} />
           )}
         </header>
       </div>

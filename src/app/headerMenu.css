@@ -2,9 +2,10 @@
   position: absolute;
   left: 0;
   width: 100%;
-  height: 345px;
+  height: 0;
   z-index: 1001;
-  background-color: red;
+  background-color: white;
+  overflow: hidden;
 }
 
 .header-menu.down {
@@ -15,4 +16,43 @@
 .header-menu.up {
   bottom: 100%;
   top: auto;
+}
+
+.header-menu.open {
+  animation: slideReveal 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes slideReveal {
+  0% {
+    height: 0;
+  }
+  100% {
+    height: 345px;
+  }
+}
+
+.menu-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  animation: fadeIn 0.3s ease forwards;
+  cursor: pointer;
+}
+
+.menu-backdrop.sticky {
+  top: 35px;
+  height: calc(100vh - 35px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
