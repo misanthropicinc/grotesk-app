@@ -59,13 +59,13 @@ export default function HeroSection({ heroImages = [] }) {
     const header = headerRef.current;
     if (!header) return;
 
-    const heroHeight = header.parentElement.offsetHeight;
-
     const handleScroll = () => {
-      if (window.scrollY >= heroHeight && !isSticky.current) {
+      const headerRect = header.getBoundingClientRect();
+
+      if (headerRect.top <= 0 && !isSticky.current) {
         isSticky.current = true;
         dispatch({ type: "sticky", payload: true });
-      } else if (window.scrollY < heroHeight - 20 && isSticky.current) {
+      } else if (headerRect.top >= 0 && isSticky.current) {
         isSticky.current = false;
         dispatch({ type: "sticky", payload: false });
       }
@@ -85,28 +85,28 @@ export default function HeroSection({ heroImages = [] }) {
     <section className="hero">
       <div className="imageContainer">
         {state.images.length > 0
-            ? state.images.map((src, index) => (
-                <div
-                  key={`${src}-${index}`}
-                  className={`slide ${index === state.currentIndex ? "active" : ""}`}
-                >
-                  <Image
-                    src={src}
-                    alt={`Hero slide ${index + 1}`}
-                    fill
-                    priority={index === 0}
-                    sizes="100vw"
-                    className="image"
-                    unoptimized
-                    suppressHydrationWarning
-                  />
-                </div>
-              ))
-            : heroImages.map((src, index) => (
-                <div
-                  key={`hero-${index}`}
-                  className={`slide ${index === state.currentIndex ? "active" : ""}`}
-                >
+          ? state.images.map((src, index) => (
+              <div
+                key={`${src}-${index}`}
+                className={`slide ${index === state.currentIndex ? "active" : ""}`}
+              >
+                <Image
+                  src={src}
+                  alt={`Hero slide ${index + 1}`}
+                  fill
+                  priority={index === 0}
+                  sizes="100vw"
+                  className="image"
+                  unoptimized
+                  suppressHydrationWarning
+                />
+              </div>
+            ))
+          : heroImages.map((src, index) => (
+              <div
+                key={`hero-${index}`}
+                className={`slide ${index === state.currentIndex ? "active" : ""}`}
+              >
                 <Image
                   src={src}
                   alt={`Hero slide ${index + 1}`}
@@ -131,7 +131,10 @@ export default function HeroSection({ heroImages = [] }) {
             </a>
             <div className="header-left">
               <div className="nav1left">
-                <div className="header-btn" onClick={() => setMenuOpen(!menuOpen)}>
+                <div
+                  className="header-btn"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                >
                   <a>MENSWEAR</a>
                   <svg
                     className="header-icn"
@@ -272,7 +275,9 @@ export default function HeroSection({ heroImages = [] }) {
               </div>
             </div>
           </nav>
-          {menuOpen && <HeaderMenu isOpen={menuOpen} isSticky={state.isSticky} />}
+          {menuOpen && (
+            <HeaderMenu isOpen={menuOpen} isSticky={state.isSticky} />
+          )}
         </header>
       </div>
     </section>
