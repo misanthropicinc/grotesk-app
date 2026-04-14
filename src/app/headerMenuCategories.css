@@ -1,0 +1,25 @@
+.menu-category {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.menu-category-title {
+  font-size: 18px;
+  color: #101010 !important;
+  font-weight: 300;
+  cursor: pointer;
+}
+
+.cat-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: #4d4d4d;
+  font-size: 1rem;
+  font-weight: 200;
+}
+
+.cat-btns a {
+  cursor: pointer;
+}

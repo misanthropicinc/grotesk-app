@@ -6,6 +6,7 @@
   z-index: 1001;
   background-color: white;
   overflow: hidden;
+  padding: 30px 350px;
 }
 
 .header-menu.down {
@@ -55,4 +56,28 @@
   to {
     opacity: 1;
   }
+}
+
+.menu-title {
+  font-size: 24px;
+  color: #101010 !important;
+}
+
+.menu-content {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.menu-content-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.menu-categories {
+  display: flex;
+  gap: 5rem;
 }
