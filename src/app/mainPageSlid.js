@@ -9,14 +9,14 @@ const CARDS = [
   {
     id: 1,
     image: "/imgs/mainPageSlidImgs/RS.png",
-    title: "RICK OWEN",
-    subtitle: "STUDIO",
+    title: "RAF SIMONS",
+    subtitle: "MORE FROM THE LEGENDARY BRAND",
   },
   {
     id: 2,
     image: "/imgs/mainPageSlidImgs/RO.png",
-    title: "RICK OWEN",
-    subtitle: "STUDIO",
+    title: "RICK OWENS",
+    subtitle: "BECOME THE ANTAGONIST OF FASHION",
   },
 ];
 
@@ -62,6 +62,13 @@ export default function MainPageSlider({ cards = CARDS }) {
     }
   }, [currentIndex, cards.length]);
 
+  const subtitleLines = (subtitle) =>
+    subtitle.split(" ").reduce((acc, word, idx) => {
+      if (idx % 3 === 0) acc.push(word);
+      else acc[acc.length - 1] += ` ${word}`;
+      return acc;
+    }, []);
+
   return (
     <div className="mainPageSliderContainer">
       <button className="sliderBtn sliderBtnLeft" onClick={prevSlide}>
@@ -85,8 +92,17 @@ export default function MainPageSlider({ cards = CARDS }) {
             >
               <img src={card.image} alt={card.title} className="cardImage" />
               <div className="cardInfo">
-                <p className="cardTitle">{card.title}</p>
-                <p className="cardSubtitle">{card.subtitle}</p>
+                <div className="cardText">
+                  <p className="cardTitle">{card.title}</p>
+                  <p className="cardSubtitle">
+                    {subtitleLines(card.subtitle).map((line, idx, arr) => (
+                      <span key={idx}>
+                        {line}
+                        {idx < arr.length - 1 ? <br /> : null}
+                      </span>
+                    ))}
+                  </p>
+                </div>
                 <MainPageSlidBtn />
               </div>
             </div>

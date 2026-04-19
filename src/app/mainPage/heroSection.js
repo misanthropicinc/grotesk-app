@@ -37,7 +37,7 @@ export default function HeroSection({ heroImages = [] }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeBtn, setActiveBtn] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
-  const headerRef = useRef(null);
+  const sentinelRef = useRef(null);
   const isFirstRender = useRef(true);
   const isSticky = useRef(false);
 
@@ -58,28 +58,30 @@ export default function HeroSection({ heroImages = [] }) {
   }, [state.images]);
 
   useEffect(() => {
-    const header = headerRef.current;
-    if (!header) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
 
-    const handleScroll = () => {
-      const headerRect = header.getBoundingClientRect();
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting && !isSticky.current) {
+          isSticky.current = true;
+          dispatch({ type: "sticky", payload: true });
+        } else if (entry.isIntersecting && isSticky.current) {
+          isSticky.current = false;
+          dispatch({ type: "sticky", payload: false });
+        }
+      },
+      {
+        root: null,
+        rootMargin: "-35px 0px 0px 0px",
+        threshold: 0,
+      },
+    );
 
-      if (headerRect.top <= 0 && !isSticky.current) {
-        isSticky.current = true;
-        dispatch({ type: "sticky", payload: true });
-      } else if (headerRect.top >= 0 && isSticky.current) {
-        isSticky.current = false;
-        dispatch({ type: "sticky", payload: false });
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, {
-      passive: true,
-      capture: true,
-    });
+    observer.observe(sentinel);
 
     return () => {
-      window.removeEventListener("scroll", handleScroll, { capture: true });
+      observer.disconnect();
     };
   }, []);
 
@@ -122,9 +124,9 @@ export default function HeroSection({ heroImages = [] }) {
               </div>
             ))}
       </div>
+      <div ref={sentinelRef} className="heroHeaderSentinel" />
       <div className="header-container">
         <header
-          ref={headerRef}
           className={`heroHeader ${state.isSticky ? "sticky" : "visible"}`}
         >
           <nav>
