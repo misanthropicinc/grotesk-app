@@ -5,18 +5,6 @@ import DesignerCard from "./designerCard";
 import SliderBtn from "../sliderBtn";
 import { useState, useEffect } from "react";
 
-const CARD_COLORS = [
-  "red",
-  "green",
-  "blue",
-  "orange",
-  "purple",
-  "cyan",
-  "yellow",
-  "magenta",
-  "lime",
-];
-
 const CARDS_BASE = [
   "/imgs/designerGifs/maison-martin-margiela-matthias-brown-gif-by-traceloops-find.mp4",
   "/imgs/designerGifs/maison-martin-margiela-matthias-brown-gif-by-traceloops-find.mp4",
@@ -76,7 +64,6 @@ export default function DesignerSection() {
               isAnyHovered={hoveredId !== null}
               onHover={() => setHoveredId(`designerCard${i}`)}
               onLeave={() => setHoveredId(null)}
-              borderColor={CARD_COLORS[i % CARD_COLORS.length]}
             />
           ))}
         </div>

@@ -1,7 +1,7 @@
 import "./designerCard.css";
 import { useRef, useEffect } from "react";
 
-export default function DesignerCard({ id, isHovered, isAnyHovered, onHover, onLeave, imgSrc, borderColor, animDir }) {
+export default function DesignerCard({ id, isHovered, isAnyHovered, onHover, onLeave, imgSrc }) {
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -22,15 +22,10 @@ export default function DesignerCard({ id, isHovered, isAnyHovered, onHover, onL
     }
   }, [isAnyHovered, isHovered]);
 
-  const borderStyle = borderColor 
-    ? `1px solid ${borderColor}` 
-    : "1px solid #101010";
-
   return (
     <div 
       id={id} 
-      className={`designerCard ${isHovered ? "hovered" : ""} ${animDir ? `anim-${animDir}` : ""}`}
-      style={{ border: borderStyle }}
+      className={`designerCard ${isHovered ? "hovered" : ""}`}
       onMouseEnter={onHover}
       onMouseLeave={onLeave}
     >

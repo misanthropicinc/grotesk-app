@@ -1,15 +1,13 @@
 import "./headerMenuCategories.css";
 
-export default function HeaderMenuCategory() {
+export default function HeaderMenuCategory({ title, items }) {
   return (
     <div className="menu-category">
-      <a className="menu-category-title">categoryT</a>
+      <a className="menu-category-title">{title}</a>
       <div className="cat-btns">
-        <a className="menu-category-btn">CATEGORY</a>
-        <a className="menu-category-btn">CATEGORY</a>
-        <a className="menu-category-btn">CATEGORY</a>
-        <a className="menu-category-btn">CATEGORY</a>
-        <a className="menu-category-btn">CATEGORY</a>
+        {items.map((item, i) => (
+          <a key={i} className="menu-category-btn">{item}</a>
+        ))}
       </div>
     </div>
   );
