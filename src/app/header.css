@@ -40,9 +40,18 @@ nav {
   cursor: pointer;
 }
 
+.header-btn .header-icn,
+.nav-btns .header-icn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .nav-btns {
   display: flex;
   gap: 12px;
+  align-items: center;
+  justify-content: center;
 }
 
 .nav-btns .header-btn .header-icn {
