@@ -1,7 +1,7 @@
 .designerCard {
   position: relative;
-  flex: 0 0 300px;
-  width: 100%;
+  flex: 0 0 calc(100vw / 3);
+  width: calc(100vw / 3);
   height: 100vh;
   border: 1px solid #101010;
   overflow: hidden;

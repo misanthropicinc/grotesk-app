@@ -30,12 +30,12 @@ const CARDS_BASE = [
 ];
 
 const LOOPED_CARDS = [...CARDS_BASE, ...CARDS_BASE, ...CARDS_BASE];
-const CARD_WIDTH = 300; // 33.333vw in px (approx based on 1920px screen)
-const CARD_COUNT = LOOPED_CARDS.length;
 
 export default function DesignerSection() {
   const [hoveredId, setHoveredId] = useState(null);
   const [index, setIndex] = useState(CARDS_BASE.length);
+
+  const cardWidth = 100 / 3;
 
   useEffect(() => {
     if (index >= CARDS_BASE.length * 2) {
@@ -58,19 +58,19 @@ export default function DesignerSection() {
       <button className="sliderBtn sliderBtnLeft" onClick={prevSlide}>
         <SliderBtn />
       </button>
-
+      
       <div className="sliderContainer">
-        <div
+        <div 
           className="sliderTrack"
           style={{
-            transform: `translateX(-${index * CARD_WIDTH}px)`,
-            transition: "transform 0.4s ease",
+            transform: `translateX(-${index * cardWidth}%)`,
+            transition: "transform 0.4s ease"
           }}
         >
           {LOOPED_CARDS.map((img, i) => (
-            <DesignerCard
+            <DesignerCard 
               key={i}
-              id={`designerCard${i}`}
+              id={`designerCard${i}`} 
               imgSrc={img}
               isHovered={hoveredId === `designerCard${i}`}
               isAnyHovered={hoveredId !== null}
@@ -81,7 +81,7 @@ export default function DesignerSection() {
           ))}
         </div>
       </div>
-
+      
       <button className="sliderBtn sliderBtnRight" onClick={nextSlide}>
         <SliderBtn />
       </button>

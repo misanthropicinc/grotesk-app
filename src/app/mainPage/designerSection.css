@@ -6,19 +6,12 @@
 }
 
 .sliderContainer {
-  width: 900px;
+  width: 100%;
   overflow: hidden;
-  margin: 0 auto;
 }
 
 .sliderTrack {
   display: flex;
-}
-
-.designerCard {
-  min-width: 300px;
-  max-width: 300px;
-  width: 300px;
 }
 
 .sliderBtn {
