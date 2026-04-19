@@ -4,10 +4,8 @@
   box-sizing: border-box;
 }
 
-a:hover,
-button:hover,
-[role="button"]:hover {
-  cursor: url('/cursor.cur'), pointer;
+*:hover {
+  cursor: url("/cursor.cur"), pointer;
 }
 
 html,

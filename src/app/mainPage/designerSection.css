@@ -21,7 +21,7 @@
   transform: translateY(-50%);
   background: transparent;
   border: none;
-  cursor: pointer;
+  cursor: url('/cursor.cur'), pointer;
   z-index: 10;
 }
 

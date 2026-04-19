@@ -1,8 +1,5 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
-/* eslint-disable react-hooks/rules-of-hooks */
-
 import "./mainPageSlid.css";
 import SliderBtn from "./sliderBtn";
 import MainPageSlidBtn from "./mainPageSlidBtn";

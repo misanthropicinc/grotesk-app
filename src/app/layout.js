@@ -1,5 +1,6 @@
 import { gotham } from "@/fonts/gotham";
 import "./globals.css";
+import Footer from "./footer";
 
 export const metadata = {
   title: "GROTESK | OFFICIAL WEBSITE",
@@ -12,7 +13,7 @@ export default function RootLayout({ children }) {
       <head>
         <title>GROTESK | OFFICIAL WEBSITE</title>
       </head>
-      <body className={gotham.variable}>{children}</body>
+      <body className={gotham.variable}>{children}<Footer /></body>
     </html>
   );
 }

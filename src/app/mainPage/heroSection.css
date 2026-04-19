@@ -101,7 +101,7 @@
 }
 
 .search-trigger {
-  cursor: pointer;
+  cursor: url('/cursor.cur'), pointer;
   display: flex;
   align-items: center;
   justify-content: center;

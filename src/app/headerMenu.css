@@ -41,7 +41,7 @@
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 999;
   animation: fadeIn 0.3s ease forwards;
-  cursor: pointer;
+  cursor: url('/cursor.cur'), pointer;
 }
 
 .menu-backdrop.sticky {

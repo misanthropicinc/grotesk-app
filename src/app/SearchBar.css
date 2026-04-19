@@ -5,7 +5,7 @@
 }
 
 .search-trigger {
-  cursor: pointer;
+  cursor: url('/cursor.cur'), pointer;
 }
 
 .search-bar {
