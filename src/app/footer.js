@@ -18,7 +18,7 @@ export default function Footer() {
         <a href="#">AUTH</a>
         <a href="#">PROFILE</a>
         <a href="#">ORDER</a>
-        <a href="#">ITEM PAGE</a>
+        <a href="/item">ITEM PAGE</a>
       </div>
     </footer>
   );
