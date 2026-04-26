@@ -39,6 +39,13 @@
 .color-name {
   font-weight: 200;
   font-size: 1rem;
+  color: #101010;
+  text-decoration: none;
+}
+
+.item-card-size span {
+  color: #101010;
+  text-decoration: none;
 }
 
 .size-color-selectors-item-card {

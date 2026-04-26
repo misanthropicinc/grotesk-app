@@ -1,10 +1,10 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import "./itempagehorizontal.css";
-import HorizontalScrollBar from "./HorizontalScrollBar";
+import "./itempagevertical.css";
+import VerticalScrollBar from "./VerticalScrollBar";
 
-export default function ItemPageHorizontal() {
+export default function ItemPageVertical() {
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -12,12 +12,12 @@ export default function ItemPageHorizontal() {
     if (!container) return;
 
     const onWheel = (e) => {
-      const canScroll = container.scrollWidth > container.clientWidth;
+      const canScroll = container.scrollHeight > container.clientHeight;
       if (!canScroll) return;
 
       e.preventDefault();
       e.stopPropagation();
-      container.scrollLeft += e.deltaY * 1.3;
+      container.scrollTop += e.deltaY * 1.3;
     };
 
     container.addEventListener("wheel", onWheel, { passive: false });
@@ -33,15 +33,17 @@ export default function ItemPageHorizontal() {
   ];
 
   return (
-    <div className="horizontal-slider-wrapper">
-      <div className="horizontal-slider" ref={scrollRef}>
-        {images.map((src, index) => (
-          <div key={index} className="horizontal-slide">
-            <img src={src} alt={`item-${index}`} />
-          </div>
-        ))}
+    <div className="vertical-slider-wrapper">
+      <div className="vertical-slider-container">
+        <VerticalScrollBar scrollRef={scrollRef} />
+        <div className="vertical-slider" ref={scrollRef}>
+          {images.map((src, index) => (
+            <div key={index} className="vertical-slide">
+              <img src={src} alt={`item-${index}`} />
+            </div>
+          ))}
+        </div>
       </div>
-      <HorizontalScrollBar scrollRef={scrollRef} />
     </div>
   );
 }

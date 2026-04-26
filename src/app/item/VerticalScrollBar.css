@@ -1,0 +1,20 @@
+.vertical-scrollbar-track {
+  background-color: #101010;
+  position: absolute;
+  left: 10px;
+  top: 20px;
+  box-sizing: border-box;
+  width: 9px;
+  padding: 3px 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.vertical-scrollbar-thumb {
+  position: absolute;
+  width: 4.5px;
+  background-color: white;
+  left: 2px;
+  top: 3px;
+  pointer-events: none;
+}

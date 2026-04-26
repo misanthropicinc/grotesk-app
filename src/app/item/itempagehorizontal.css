@@ -1,16 +1,20 @@
 .horizontal-slider {
   display: flex;
-  padding: 20px;
   overflow-x: auto;
   overflow-y: hidden;
   scroll-behavior: smooth;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
 }
 
 .horizontal-slider-wrapper {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100vh;
 }
 
 .horizontal-slider::-webkit-scrollbar {
@@ -20,7 +24,8 @@
 .horizontal-slide {
   flex-shrink: 0;
   width: 640px;
-  height: 1000px;
+  height: 100vh;
+  border: 1px solid #101010;
 }
 
 .horizontal-slide img {

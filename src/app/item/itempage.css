@@ -3,3 +3,10 @@
   min-height: 100vh;
   padding: 20px;
 }
+
+.item-page-content {
+  display: flex;
+
+  align-items: flex-start;
+  width: 100%;
+}
