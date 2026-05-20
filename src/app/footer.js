@@ -15,10 +15,12 @@ export default function Footer() {
       <div className="footer-left">
         <a href="/home">HOME</a>
         <a href="/catalog">CATALOG</a>
-        <a href="#">AUTH</a>
-        <a href="#">PROFILE</a>
+        <a href="/cart">CART</a>
+        <a href="/auth">AUTH</a>
+        <a href="/profile">PROFILE</a>
         <a href="#">ORDER</a>
         <a href="/item">ITEM PAGE</a>
+        <a href="/migrate">MIGRATE</a>
       </div>
     </footer>
   );

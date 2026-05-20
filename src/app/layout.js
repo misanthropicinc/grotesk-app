@@ -19,9 +19,7 @@ export default function RootLayout({ children }) {
       <body className={gotham.variable}>
         <HotkeyListener />
         {children}
-        <div style={{ position: "relative", zIndex: 1000 }}>
-          <Footer />
-        </div>
+        <Footer />
       </body>
     </html>
   );

@@ -1,6 +1,6 @@
 import "./searchBarComponent.css";
 
-export default function SearchBarComponent() {
+export default function SearchBarComponent({ value, onChange }) {
   return (
     <div className="search-bar-component">
       <svg
@@ -18,6 +18,8 @@ export default function SearchBarComponent() {
         type="text"
         className="search-bar-input"
         placeholder="SEARCH..."
+        value={value}
+        onChange={onChange}
       />
     </div>
   );

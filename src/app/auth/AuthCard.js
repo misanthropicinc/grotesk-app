@@ -1,12 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { login, getSession } from "./authService";
 import ForgotModal from "./ForgotModal";
 import ScanChatModal from "./ScanChatModal";
 
-export default function AuthCard() {
+function useAuthRedirect() {
+  const router = useRouter();
   const session = getSession();
+
+  useEffect(() => {
+    if (session) {
+      router.push("/profile");
+    }
+  }, [session, router]);
+
+  return session;
+}
+
+export default function AuthCard() {
+  const session = useAuthRedirect();
   const [forgotOpen, setForgotOpen] = useState(false);
   const [isRegister, setIsRegister] = useState(false);
   const [telegram, setTelegram] = useState("");
@@ -29,17 +43,12 @@ export default function AuthCard() {
       setScanOpen(true);
     } else {
       const result = login(telegram, password);
-      setMessage({ type: result.success ? "success" : "error", text: result.success ? "Logged in successfully." : result.error });
+      if (result.success) {
+        window.location.href = "/profile";
+      } else {
+        setMessage({ type: "error", text: result.error });
+      }
     }
-  }
-
-  if (session) {
-    return (
-      <div className="auth-card">
-        <h1 className="auth-card-title">Welcome</h1>
-        <p className="auth-session-info">Logged in as @{session.telegram}</p>
-      </div>
-    );
   }
 
   return (

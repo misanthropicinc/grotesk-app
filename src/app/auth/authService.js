@@ -1,3 +1,5 @@
+import { apiGet, apiFormPatch } from "../backend";
+
 const USERS_KEY = "grotesk_users";
 const SESSION_KEY = "grotesk_session";
 const RESET_PREFIX = "grotesk_reset_";
@@ -160,4 +162,61 @@ export function getSession() {
   } catch {
     return null;
   }
+}
+
+/** Sync localStorage user lookup (always works, no API dependency). */
+export function getCurrentUser() {
+  const session = getSession();
+  if (!session) return null;
+  const users = getUsers();
+  return users.find((u) => u.telegram === session.telegram) || null;
+}
+
+/** Async: fetch user profile from the Django API. Falls back to localStorage. */
+export async function getCurrentUserFromApi() {
+  const session = getSession();
+  if (!session) return null;
+  try {
+    const data = await apiGet(`/users/${session.telegram}/`);
+    if (data) {
+      return {
+        telegram: data.telegram,
+        role: data.role,
+        pfp: data.pfp || null,
+        designerProfile: data.designer_name
+          ? { name: data.designer_name, logo: data.designer_logo || null, runwayGifs: data.runway_gifs || [] }
+          : null,
+      };
+    }
+  } catch {}
+  return getCurrentUser();
+}
+
+/** Sync localStorage profile update. */
+export function updateUserProfile(telegram, updates) {
+  const tg = normalizeTelegram(telegram);
+  const users = getUsers();
+  const idx = users.findIndex((u) => u.telegram === tg);
+  if (idx === -1) return { success: false, error: "User not found" };
+  users[idx] = { ...users[idx], ...updates };
+  saveUsers(users);
+  return { success: true };
+}
+
+/** Async: save profile to Django API + localStorage. */
+export async function updateUserProfileToApi(telegram, updates) {
+  const tg = normalizeTelegram(telegram);
+  const local = updateUserProfile(tg, updates);
+  try {
+    const fd = new FormData();
+    if (updates.role !== undefined) fd.append("role", updates.role);
+    if (updates.designerProfile?.name) fd.append("designer_name", updates.designerProfile.name);
+    const res = await fetch(`http://localhost:8000/api/users/${tg}/`, { method: "PATCH", body: fd });
+    if (res.ok) return { success: true, api: true };
+  } catch {}
+  return local;
+}
+
+export function getAllUsers() {
+  return getUsers();
 }

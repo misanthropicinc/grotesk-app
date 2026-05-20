@@ -1,0 +1,63 @@
+.migrate-page {
+  width: 1400px;
+  margin: 0 auto;
+  padding: 32px 60px 80px;
+}
+
+.migrate-page h1 {
+  font-size: 22px;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+
+.migrate-summary {
+  border: 1px solid #101010;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.migrate-summary h2 {
+  font-size: 14px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.migrate-summary p {
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.migrate-btn {
+  padding: 12px 32px;
+  font-size: 13px;
+  text-transform: uppercase;
+  font-family: inherit;
+  border: 1px solid #101010;
+  background: #101010;
+  color: white;
+  cursor: pointer;
+}
+
+.migrate-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.migrate-log {
+  border: 1px solid #101010;
+  padding: 16px;
+  margin-top: 24px;
+  max-height: 400px;
+  overflow-y: auto;
+  font-size: 11px;
+  font-family: monospace;
+}
+
+.migrate-log-entry {
+  padding: 4px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.migrate-log-entry.success { color: #090; }
+.migrate-log-entry.error { color: #c00; }
+.migrate-log-entry.info { color: #333; }

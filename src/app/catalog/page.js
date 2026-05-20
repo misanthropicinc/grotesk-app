@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import SearchBarComponent from "../SearchBarComponent";
 import ItemCard from "./itemCard";
 import "./page.css";
@@ -15,10 +15,29 @@ const genders = ["Male", "Female", "Unisex"];
 const conditions = ["New", "Like New", "Good", "Fair", "Poor"];
 const garmentTypes = ["T-Shirt", "Hoodie", "Sweatshirt", "Jacket", "Coat", "Blazer", "Jeans", "Trousers", "Shorts", "Sweatpants", "Cargo Pants", "Shoes", "Sneakers", "Boots", "Dress Shoes", "Sandals", "Shirt", "Dress Shirt", "Polo Shirt", "Suit", "Vest", "Skirt", "Dress", "Jumpsuit", "Overalls", "Hat", "Cap", "Beanie", "Scarf", "Gloves", "Belt", "Tie", "Socks", "Underwear", "Swimwear", "Activewear", "Loungewear", "Sleepwear", "Parka", "Puffer Jacket", "Bomber Jacket", "Leather Jacket", "Denim Jacket", "Windbreaker", "Cardigan", "Turtleneck", "Hoodie Dress", "Tracksuit"];
 
+const DEFAULT_ITEMS = [
+  {
+    title: "OVERSIZED HOODIE",
+    brand: "DRKSHDW",
+    price: "600",
+    type: "Hoodie",
+    gender: "Male",
+    condition: "New",
+    size: "M",
+    color: "BLACK/MILK",
+    sellerCountry: "United States",
+    image: "/imgs/presetitemimg1.webp",
+  },
+];
+
 function FilterInput({ placeholder, list, value, onChange }) {
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState(value || "");
   const [isFocused, setIsFocused] = useState(false);
   const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    setInputValue(value || "");
+  }, [value]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -43,7 +62,7 @@ function FilterInput({ placeholder, list, value, onChange }) {
         onChange={(e) => {
           setInputValue(e.target.value);
           setIsFocused(true);
-          if (onChange) onChange(e);
+          if (onChange) onChange(e.target.value || "");
         }}
         onFocus={() => setIsFocused(true)}
         autoComplete="off"
@@ -58,7 +77,7 @@ function FilterInput({ placeholder, list, value, onChange }) {
                 e.preventDefault();
                 setInputValue(item);
                 setIsFocused(false);
-                if (onChange) onChange({ target: { value: item } });
+                if (onChange) onChange(item);
               }}
             >
               {item}
@@ -70,24 +89,72 @@ function FilterInput({ placeholder, list, value, onChange }) {
   );
 }
 
+function getLocalItems() {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(localStorage.getItem("grotesk_items") || "[]");
+  } catch {
+    return [];
+  }
+}
+
 export default function Catalog() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [menuStyle, setMenuStyle] = useState({ top: 0, height: "100vh" });
-  const [garmentType, setGarmentType] = useState("");
+  const [searchText, setSearchText] = useState("");
+  const [filterCountry, setFilterCountry] = useState("");
+  const [filterSize, setFilterSize] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const [filterBrand, setFilterBrand] = useState("");
+  const [filterGender, setFilterGender] = useState("");
+  const [filterCondition, setFilterCondition] = useState("");
+  const [filterPriceFrom, setFilterPriceFrom] = useState("");
+  const [filterPriceTo, setFilterPriceTo] = useState("");
+
+  const isShoes = filterType.toLowerCase().includes("shoe");
+
+  const allItems = useMemo(() => {
+    const local = getLocalItems();
+    return [...DEFAULT_ITEMS, ...local.map((i) => ({
+      title: i.title,
+      brand: i.brand,
+      price: i.price,
+      type: i.type,
+      gender: i.gender,
+      condition: i.condition,
+      size: i.size,
+      color: i.color,
+      sellerCountry: i.sellerCountry,
+      image: i.images?.[0] || "",
+    }))];
+  }, []);
+
+  const filteredItems = useMemo(() => {
+    return allItems.filter((item) => {
+      const s = searchText.toLowerCase();
+      if (s && !item.title?.toLowerCase().includes(s) && !item.brand?.toLowerCase().includes(s) && !item.type?.toLowerCase().includes(s))
+        return false;
+      if (filterCountry && item.sellerCountry !== filterCountry) return false;
+      if (filterSize && item.size !== filterSize) return false;
+      if (filterType && item.type !== filterType) return false;
+      if (filterBrand && !item.brand?.toLowerCase().includes(filterBrand.toLowerCase())) return false;
+      if (filterGender && item.gender !== filterGender) return false;
+      if (filterCondition && item.condition !== filterCondition) return false;
+      const price = parseFloat(item.price);
+      if (filterPriceFrom && price < parseFloat(filterPriceFrom)) return false;
+      if (filterPriceTo && price > parseFloat(filterPriceTo)) return false;
+      return true;
+    });
+  }, [allItems, searchText, filterCountry, filterSize, filterType, filterBrand, filterGender, filterCondition, filterPriceFrom, filterPriceTo]);
 
   useEffect(() => {
     const update = () => {
       const header = document.querySelector(".catalog-top-section");
       const searchSection = document.querySelector(".catalog-seciton");
-      
       let top = 0;
       if (header) top += header.getBoundingClientRect().height;
       if (searchSection) top += searchSection.getBoundingClientRect().height;
-      
-      setMenuStyle({
-        top,
-        height: `calc(100vh - ${top}px)`,
-      });
+      setMenuStyle({ top, height: `calc(100vh - ${top}px)` });
     };
     update();
     window.addEventListener("resize", update);
@@ -107,9 +174,7 @@ export default function Catalog() {
       document.body.style.top = '';
       document.body.style.width = '';
       document.body.style.overflow = '';
-      if (scrollTop) {
-        window.scrollTo(0, -parseInt(scrollTop));
-      }
+      if (scrollTop) window.scrollTo(0, -parseInt(scrollTop));
     }
     return () => {
       document.body.style.position = '';
@@ -119,14 +184,27 @@ export default function Catalog() {
     };
   }, [isFilterOpen]);
 
-  const isShoes = garmentType.toLowerCase().includes("shoe");
+  function clearFilters() {
+    setFilterCountry("");
+    setFilterSize("");
+    setFilterType("");
+    setFilterBrand("");
+    setFilterGender("");
+    setFilterCondition("");
+    setFilterPriceFrom("");
+    setFilterPriceTo("");
+    setSearchText("");
+  }
 
   return (
     <>
       <div style={{ position: "relative", zIndex: isFilterOpen ? 1 : "auto" }}>
         <section className="catalog-seciton">
           <div className="catalog-searchfilter">
-            <SearchBarComponent />
+            <SearchBarComponent
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
             <button
               className="filter-button"
               onClick={() => setIsFilterOpen(!isFilterOpen)}
@@ -149,48 +227,56 @@ export default function Catalog() {
       >
         <div className="filter-menu-inner">
           <h3>FILTER OPTIONS</h3>
-          <FilterInput placeholder="SELLER COUNTRY" list={countries} />
-          <FilterInput 
-            placeholder="SIZE" 
-            list={isShoes ? shoeSizes : clothingSizes} 
-          />
-          <FilterInput 
-            placeholder="TYPE OF GARMENT" 
-            list={garmentTypes}
-            onChange={(e) => setGarmentType(e.target.value)}
-          />
-          <FilterInput placeholder="BRAND" list={[]} />
-          <FilterInput placeholder="GENDER" list={genders} />
-          <FilterInput placeholder="CONDITION" list={conditions} />
+          <FilterInput placeholder="SELLER COUNTRY" list={countries} value={filterCountry} onChange={setFilterCountry} />
+          <FilterInput placeholder="SIZE" list={isShoes ? shoeSizes : clothingSizes} value={filterSize} onChange={setFilterSize} />
+          <FilterInput placeholder="TYPE OF GARMENT" list={garmentTypes} value={filterType} onChange={(v) => setFilterType(v)} />
+          <FilterInput placeholder="BRAND" list={[]} value={filterBrand} onChange={setFilterBrand} />
+          <FilterInput placeholder="GENDER" list={genders} value={filterGender} onChange={setFilterGender} />
+          <FilterInput placeholder="CONDITION" list={conditions} value={filterCondition} onChange={setFilterCondition} />
           <div style={{ marginBottom: "30px" }} />
           <div style={{ fontSize: "18px", marginBottom: "10px", marginTop: "20px" }}>PRICE RANGE</div>
           <div style={{ display: "flex", gap: "2rem", marginBottom: "15px" }}>
-            <input 
-              className="filter-input" 
-              placeholder="PRICE FROM" 
-              style={{ width: "50%", background: "none", cursor: "text" }} 
+            <input
+              className="filter-input"
+              placeholder="PRICE FROM"
+              value={filterPriceFrom}
+              onChange={(e) => setFilterPriceFrom(e.target.value)}
+              style={{ width: "50%", background: "none", cursor: "text" }}
             />
-            <input 
-              className="filter-input" 
-              placeholder="PRICE TO" 
-              style={{ width: "50%", background: "none", cursor: "text" }} 
+            <input
+              className="filter-input"
+              placeholder="PRICE TO"
+              value={filterPriceTo}
+              onChange={(e) => setFilterPriceTo(e.target.value)}
+              style={{ width: "50%", background: "none", cursor: "text" }}
             />
           </div>
+          <button
+            onClick={clearFilters}
+            style={{ width: "100%", padding: "10px", border: "1px solid #101010", background: "white", cursor: "pointer", fontSize: "11px", textTransform: "uppercase", fontFamily: "inherit" }}
+          >
+            CLEAR FILTERS
+          </button>
         </div>
       </div>
 
       <div style={{ position: "relative", zIndex: isFilterOpen ? 1 : "auto" }}>
         <div className="catalog-grid-container">
-          <ItemCard />
-          <ItemCard />
-          <ItemCard />
-          <ItemCard />
-          <ItemCard />
-          <ItemCard />
-          <ItemCard />
-          <ItemCard />
-          <ItemCard />
-          <ItemCard />
+          {filteredItems.length === 0 ? (
+            <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "60px 20px", fontSize: "12px", color: "#666", border: "1px solid #999" }}>
+              NO ITEMS MATCH YOUR SEARCH
+            </div>
+          ) : (
+            filteredItems.map((item, i) => (
+              <ItemCard
+                key={i}
+                title={item.title}
+                brand={item.brand}
+                price={item.price}
+                image={item.image}
+              />
+            ))
+          )}
         </div>
       </div>
     </>

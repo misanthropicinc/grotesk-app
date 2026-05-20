@@ -5,12 +5,29 @@ import Image from "next/image";
 import "./pageHeader.css";
 import PageHeaderMenu from "./PageHeaderMenu";
 import logoImg from "../../imgs/grotesk-header-logo.png";
+import { getSession } from "../auth/authService";
+import { getCartCount } from "../cart/cartService";
 
 export default function PageHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeBtn, setActiveBtn] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+
+  useEffect(() => {
+    function update() {
+      const s = getSession();
+      setCartCount(s ? getCartCount(s.telegram) : 0);
+    }
+    update();
+    window.addEventListener("storage", update);
+    window.addEventListener("cart-update", update);
+    return () => {
+      window.removeEventListener("storage", update);
+      window.removeEventListener("cart-update", update);
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -184,23 +201,64 @@ export default function PageHeader() {
                 />
               </svg>
             </a>
-            <a href="#">
-              <svg
-                className="page-header-icn"
-                width="14"
-                height="14"
-                viewBox="0 0 15 15"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M10.9766 12.5357C10.0321 11.4808 8.65975 10.817 7.13235 10.817C5.60495 10.817 4.23248 11.4808 3.28795 12.5357M7.13235 13.7647C3.46941 13.7647 0.5 10.7953 0.5 7.13235C0.5 3.46941 3.46941 0.5 7.13235 0.5C10.7953 0.5 13.7647 3.46941 13.7647 7.13235C13.7647 10.7953 10.7953 13.7647 7.13235 13.7647ZM7.13235 8.60621C5.91137 8.60621 4.92157 7.61641 4.92157 6.39542C4.92157 5.17444 5.91137 4.18464 7.13235 4.18464C8.35334 4.18464 9.34314 5.17444 9.34314 6.39542C9.34314 7.61641 8.35334 8.60621 7.13235 8.60621Z"
-                  stroke="white"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </a>
+             <a href="/cart" style={{ position: "relative" }}>
+               <svg
+                 className="page-header-icn"
+                 width="16"
+                 height="16"
+                 viewBox="0 0 20 20"
+                 fill="none"
+                 xmlns="http://www.w3.org/2000/svg"
+               >
+                 <path
+                   d="M5.5 7.5H17L15.5 15.5H6L4 3.5H1.5"
+                   stroke="white"
+                   strokeWidth="1.5"
+                   strokeLinecap="round"
+                   strokeLinejoin="round"
+                 />
+                 <circle cx="7" cy="17" r="1.2" fill="white" />
+                 <circle cx="14" cy="17" r="1.2" fill="white" />
+               </svg>
+               {cartCount > 0 && (
+                 <span style={{
+                   position: "absolute",
+                   top: "-6px",
+                   right: "-8px",
+                   background: "white",
+                   color: "#101010",
+                   fontSize: "9px",
+                   fontWeight: "700",
+                   width: "16px",
+                   height: "16px",
+                   borderRadius: "50%",
+                   display: "flex",
+                   alignItems: "center",
+                   justifyContent: "center",
+                   lineHeight: "1",
+                   border: "1px solid #101010",
+                 }}>
+                   {cartCount}
+                 </span>
+               )}
+             </a>
+             <a href="/profile">
+               <svg
+                 className="page-header-icn"
+                 width="14"
+                 height="14"
+                 viewBox="0 0 15 15"
+                 fill="none"
+                 xmlns="http://www.w3.org/2000/svg"
+               >
+                 <path
+                   d="M10.9766 12.5357C10.0321 11.4808 8.65975 10.817 7.13235 10.817C5.60495 10.817 4.23248 11.4808 3.28795 12.5357M7.13235 13.7647C3.46941 13.7647 0.5 10.7953 0.5 7.13235C0.5 3.46941 3.46941 0.5 7.13235 0.5C10.7953 0.5 13.7647 3.46941 13.7647 7.13235C13.7647 10.7953 10.7953 13.7647 7.13235 13.7647ZM7.13235 8.60621C5.91137 8.60621 4.92157 7.61641 4.92157 6.39542C4.92157 5.17444 5.91137 4.18464 7.13235 4.18464C8.35334 4.18464 9.34314 5.17444 9.34314 6.39542C9.34314 7.61641 8.35334 8.60621 7.13235 8.60621Z"
+                   stroke="white"
+                   strokeLinecap="round"
+                   strokeLinejoin="round"
+                 />
+               </svg>
+             </a>
           </div>
         </div>
       </nav>

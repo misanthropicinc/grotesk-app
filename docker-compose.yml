@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: grotesk
+      POSTGRES_USER: grotesk
+      POSTGRES_PASSWORD: grotesk
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DJANGO_DB_HOST: db
+      DJANGO_DB_PORT: "5432"
+      DJANGO_DB_NAME: grotesk
+      DJANGO_DB_USER: grotesk
+      DJANGO_DB_PASSWORD: grotesk
+    volumes:
+      - ./backend:/app
+      - media:/app/media
+
+volumes:
+  pgdata:
+  media:
