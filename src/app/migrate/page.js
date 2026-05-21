@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import PageHeader from "../mainPage/PageHeader";
 import Breadcrumbs from "../breadcrumbs";
+import { shouldUseLocalFallback } from "../backendStatus";
 import "./migrate.css";
 
 const API = "http://localhost:8000/api";
@@ -203,6 +204,8 @@ export default function MigratePage() {
     setRunning(false);
   }
 
+  const backendDown = shouldUseLocalFallback();
+
   return (
     <>
       <PageHeader />
@@ -222,8 +225,8 @@ export default function MigratePage() {
           </div>
         )}
 
-        <button className="migrate-btn" onClick={migrate} disabled={running || done || !summary}>
-          {done ? "MIGRATED" : running ? "MIGRATING..." : "START MIGRATION"}
+        <button className="migrate-btn" onClick={migrate} disabled={running || done || !summary || backendDown}>
+          {backendDown ? "BACKEND UNAVAILABLE" : done ? "MIGRATED" : running ? "MIGRATING..." : "START MIGRATION"}
         </button>
 
         {log.length > 0 && (

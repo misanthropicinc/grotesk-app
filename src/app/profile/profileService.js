@@ -1,4 +1,5 @@
 import { apiGet, apiPost } from "../backend";
+import { shouldUseLocalFallback } from "../backendStatus";
 
 const ITEMS_KEY = "grotesk_items";
 const FAVORITES_KEY = "grotesk_favorites";
@@ -29,19 +30,21 @@ export function addItem(item) {
   saveItems(items);
 
   // Fire-and-forget: try API
-  const fd = new FormData();
-  Object.entries(newItem).forEach(([k, v]) => {
-    if (k !== "images" && k !== "shoeModels" && v !== undefined && v !== null) {
-      fd.append(k, String(v));
-    }
-  });
-  if (newItem.images?.length) {
-    newItem.images.forEach((url, i) => {
-      const blob = dataURLtoBlob(url);
-      if (blob) fd.append("images", new File([blob], `img_${i}.webp`, { type: blob.type }));
+  if (!shouldUseLocalFallback()) {
+    const fd = new FormData();
+    Object.entries(newItem).forEach(([k, v]) => {
+      if (k !== "images" && k !== "shoeModels" && v !== undefined && v !== null) {
+        fd.append(k, String(v));
+      }
     });
+    if (newItem.images?.length) {
+      newItem.images.forEach((url, i) => {
+        const blob = dataURLtoBlob(url);
+        if (blob) fd.append("images", new File([blob], `img_${i}.webp`, { type: blob.type }));
+      });
+    }
+    fetch("http://localhost:8000/api/items/", { method: "POST", body: fd }).catch(() => {});
   }
-  fetch("http://localhost:8000/api/items/", { method: "POST", body: fd }).catch(() => {});
 
   return newItem;
 }
@@ -63,7 +66,9 @@ export async function getUserItemsFromApi(telegram) {
 export function deleteItem(itemId) {
   const items = getItems().filter((i) => i.id !== itemId);
   saveItems(items);
-  fetch(`http://localhost:8000/api/items/${itemId}/`, { method: "DELETE" }).catch(() => {});
+  if (!shouldUseLocalFallback()) {
+    fetch(`http://localhost:8000/api/items/${itemId}/`, { method: "DELETE" }).catch(() => {});
+  }
 }
 
 export function getAllItems() {
@@ -95,15 +100,19 @@ export function addFavorite(telegram, itemId) {
     favs.push(itemId);
     localStorage.setItem(FAVORITES_KEY + "_" + telegram, JSON.stringify(favs));
   }
-  apiPost("/items/favorites/", { telegram, item_id: String(itemId) }).catch(() => {});
+  if (!shouldUseLocalFallback()) {
+    apiPost("/items/favorites/", { telegram, item_id: String(itemId) }).catch(() => {});
+  }
 }
 
 export function removeFavorite(telegram, itemId) {
   const favs = getFavorites(telegram).filter((id) => id !== itemId);
   localStorage.setItem(FAVORITES_KEY + "_" + telegram, JSON.stringify(favs));
-  fetch(`http://localhost:8000/api/items/favorites/?telegram=${telegram}&item_id=${itemId}`, {
-    method: "DELETE",
-  }).catch(() => {});
+  if (!shouldUseLocalFallback()) {
+    fetch(`http://localhost:8000/api/items/favorites/?telegram=${telegram}&item_id=${itemId}`, {
+      method: "DELETE",
+    }).catch(() => {});
+  }
 }
 
 export function getFavoriteItems(telegram) {

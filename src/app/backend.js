@@ -1,6 +1,9 @@
+import { shouldUseLocalFallback } from "./backendStatus";
+
 const API = "http://localhost:8000/api";
 
 async function api(method, path, body, isFormData = false) {
+  if (shouldUseLocalFallback()) return null;
   try {
     const opts = { method };
     if (body) {

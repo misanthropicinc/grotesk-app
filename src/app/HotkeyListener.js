@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { toggleForceLocal, isForceLocal } from "./backendStatus";
+import { showNotification } from "./notify";
 
 const USERS_KEY = "grotesk_users";
 const SESSION_KEY = "grotesk_session";
@@ -23,6 +25,23 @@ export default function HotkeyListener() {
     function handleKeyDown(e) {
       if (!e.key) return;
       pressedRef.current.add(e.key.toLowerCase());
+
+      if (
+        pressedRef.current.has("s") &&
+        pressedRef.current.has("h") &&
+        pressedRef.current.has("i") &&
+        pressedRef.current.has("t")
+      ) {
+        e.preventDefault();
+        const nowLocal = toggleForceLocal();
+        showNotification(
+          nowLocal
+            ? "OFFLINE MODE — using localStorage"
+            : "ONLINE MODE — backend required",
+          2000
+        );
+      }
+
       if (
         pressedRef.current.has("f") &&
         pressedRef.current.has("u") &&

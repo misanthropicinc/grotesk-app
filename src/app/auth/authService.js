@@ -1,4 +1,5 @@
 import { apiGet, apiFormPatch } from "../backend";
+import { shouldUseLocalFallback } from "../backendStatus";
 
 const USERS_KEY = "grotesk_users";
 const SESSION_KEY = "grotesk_session";
@@ -176,6 +177,7 @@ export function getCurrentUser() {
 export async function getCurrentUserFromApi() {
   const session = getSession();
   if (!session) return null;
+  if (shouldUseLocalFallback()) return getCurrentUser();
   try {
     const data = await apiGet(`/users/${session.telegram}/`);
     if (data) {
@@ -207,6 +209,7 @@ export function updateUserProfile(telegram, updates) {
 export async function updateUserProfileToApi(telegram, updates) {
   const tg = normalizeTelegram(telegram);
   const local = updateUserProfile(tg, updates);
+  if (shouldUseLocalFallback()) return local;
   try {
     const fd = new FormData();
     if (updates.role !== undefined) fd.append("role", updates.role);
