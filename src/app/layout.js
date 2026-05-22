@@ -3,6 +3,7 @@ import "./globals.css";
 import Footer from "./footer";
 import HotkeyListener from "./HotkeyListener";
 import BackendGuard from "./BackendGuard";
+import LoadingScreen from "./LoadingScreen";
 
 const metadata = {
   title: "GROTESK | OFFICIAL WEBSITE",
@@ -20,6 +21,7 @@ export default function RootLayout({ children }) {
       <body className={gotham.variable}>
         <BackendGuard />
         <HotkeyListener />
+        <LoadingScreen />
         {children}
         <Footer />
       </body>

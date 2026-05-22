@@ -56,7 +56,7 @@ export default function MigratePage() {
 
     const itemIdMap = {};
 
-    // 1. Migrate users
+
     for (const u of summary.users) {
       try {
         addLog(`Creating user @${u.telegram}...`, "info");
@@ -68,7 +68,7 @@ export default function MigratePage() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         addLog(`User @${u.telegram} created`, "success");
 
-        // Update profile (role, pfp, designer)
+
         const fd = new FormData();
         if (u.role) fd.append("role", u.role);
         if (u.designerProfile?.name) fd.append("designer_name", u.designerProfile.name);
@@ -85,7 +85,7 @@ export default function MigratePage() {
           if (file) fd.append("designer_logo", file);
         }
 
-        // Upload runway gifs
+
         if (u.designerProfile?.runwayGifs?.length) {
           const runFd = new FormData();
           for (let i = 0; i < u.designerProfile.runwayGifs.length; i++) {
@@ -120,7 +120,7 @@ export default function MigratePage() {
       }
     }
 
-    // 2. Migrate items
+
     for (const item of summary.items) {
       try {
         addLog(`Creating item "${item.title}"...`, "info");
@@ -142,7 +142,7 @@ export default function MigratePage() {
         fd.append("is_resale", String(!!item.isResale));
         fd.append("designer_telegram", item.designerTelegram || "");
 
-        // Images
+
         if (item.images?.length) {
           for (let i = 0; i < item.images.length; i++) {
             const blob = dataURLtoBlob(item.images[i]);
@@ -151,7 +151,7 @@ export default function MigratePage() {
           }
         }
 
-        // 3D shoe models
+
         if (item.shoeModels?.length) {
           for (const m of item.shoeModels) {
             const blob = dataURLtoBlob(m.url);
@@ -174,7 +174,7 @@ export default function MigratePage() {
       }
     }
 
-    // 3. Migrate favorites
+
     let favCount = 0;
     for (const fav of summary.favs) {
       const newItemId = itemIdMap[fav.itemId];

@@ -50,9 +50,7 @@ export default function CartPage() {
 
   function handleCheckout() {
     if (!session) return;
-    alert("Order placed. Thank you.");
-    clearCart(session.telegram);
-    refresh();
+    router.push("/checkout");
   }
 
   const subtotal = total;

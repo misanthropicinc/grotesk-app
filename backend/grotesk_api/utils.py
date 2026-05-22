@@ -3,6 +3,7 @@ import os
 from io import BytesIO
 from PIL import Image
 from django.conf import settings
+from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 
 
@@ -34,6 +35,3 @@ def save_upload_as_webp(uploaded_file, subdir="items"):
     name = f"{os.path.splitext(uploaded_file.name)[0]}.webp"
     path = default_storage.save(f"{subdir}/{name}", ContentFile(webp_bytes))
     return path
-
-
-from django.core.files.base import ContentFile

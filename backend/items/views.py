@@ -1,3 +1,4 @@
+import json
 import subprocess
 import os
 from io import BytesIO
@@ -8,7 +9,7 @@ from django.core.files.storage import default_storage
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Item, ItemImage, ItemShoeModel, Favorite
+from .models import Item, ItemColor, ItemColorImage, ItemShoeModel, Favorite
 from .serializers import ItemSerializer, FavoriteSerializer
 
 
@@ -30,28 +31,47 @@ def item_list(request):
             brand=data.get("brand"),
             price=data.get("price"),
             description=data.get("description", ""),
+            collection=data.get("collection", ""),
+            color_name=data.get("color_name", ""),
+            color_hex=data.get("color_hex", ""),
             type=data.get("type"),
             gender=data.get("gender"),
             condition=data.get("condition"),
             size=data.get("size", ""),
             custom_size=data.get("custom_size", ""),
             shoe_standard=data.get("shoe_standard", ""),
-            color_name=data.get("color_name", ""),
-            color_hex=data.get("color_hex", "#000000"),
             country=data.get("country"),
             seller_telegram=data.get("seller_telegram"),
             is_resale=data.get("is_resale", False),
             designer_telegram=data.get("designer_telegram", ""),
         )
 
-        images = request.FILES.getlist("images")
-        for img in images:
-            webp_bytes = convert_to_webp(img)
-            item_image = ItemImage(item=item)
-            item_image.image.save(img.name, img, save=False)
-            webp_name = f"{os.path.splitext(img.name)[0]}.webp"
-            item_image.webp.save(webp_name, ContentFile(webp_bytes), save=False)
-            item_image.save()
+        colors_json = data.get("colors")
+        if colors_json:
+            try:
+                colors_data = json.loads(colors_json)
+                all_images = request.FILES.getlist("images")
+                img_idx = 0
+                for order, cd in enumerate(colors_data):
+                    color = ItemColor.objects.create(
+                        item=item,
+                        name=cd.get("name", ""),
+                        hex=cd.get("hex", "#000000"),
+                        order=order,
+                    )
+                    count = cd.get("imageCount", 0)
+                    for _ in range(count):
+                        if img_idx < len(all_images):
+                            img = all_images[img_idx]
+                            webp_bytes = convert_to_webp(img)
+                            ci = ItemColorImage(color=color)
+                            ci.image.save(img.name, img, save=False)
+                            webp_name = f"{os.path.splitext(img.name)[0]}.webp"
+                            ci.webp.save(webp_name, ContentFile(webp_bytes), save=False)
+                            ci.save()
+                            img_idx += 1
+            except json.JSONDecodeError:
+                pass
 
         shoe_files = request.FILES.getlist("shoe_models")
         for sf in shoe_files:
@@ -65,7 +85,7 @@ def item_list(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-@api_view(["GET", "DELETE"])
+@api_view(["GET", "PATCH", "DELETE"])
 def item_detail(request, item_id):
     try:
         item = Item.objects.get(id=item_id)
@@ -73,6 +93,60 @@ def item_detail(request, item_id):
         return Response({"error": "Item not found"}, status=404)
 
     if request.method == "GET":
+        serializer = ItemSerializer(item, context={"request": request})
+        return Response(serializer.data)
+
+    if request.method == "PATCH":
+        data = request.data
+        for field in ["title", "brand", "price", "description", "collection",
+                       "color_name", "color_hex", "type", "gender", "condition",
+                       "size", "custom_size", "shoe_standard", "country",
+                       "seller_telegram", "designer_telegram"]:
+            val = data.get(field)
+            if val is not None:
+                setattr(item, field, val)
+        if data.get("is_resale") is not None:
+            item.is_resale = data.get("is_resale") in ("true", "True", True, "1", 1)
+        item.save()
+
+        colors_json = data.get("colors")
+        if colors_json:
+            item.colors.all().delete()
+            try:
+                colors_data = json.loads(colors_json)
+                all_images = request.FILES.getlist("images")
+                img_idx = 0
+                for order, cd in enumerate(colors_data):
+                    color = ItemColor.objects.create(
+                        item=item,
+                        name=cd.get("name", ""),
+                        hex=cd.get("hex", "#000000"),
+                        order=order,
+                    )
+                    count = cd.get("imageCount", 0)
+                    for _ in range(count):
+                        if img_idx < len(all_images):
+                            img = all_images[img_idx]
+                            webp_bytes = convert_to_webp(img)
+                            ci = ItemColorImage(color=color)
+                            ci.image.save(img.name, img, save=False)
+                            webp_name = f"{os.path.splitext(img.name)[0]}.webp"
+                            ci.webp.save(webp_name, ContentFile(webp_bytes), save=False)
+                            ci.save()
+                            img_idx += 1
+            except json.JSONDecodeError:
+                pass
+
+        shoe_files = request.FILES.getlist("shoe_models")
+        if shoe_files:
+            item.shoe_models.all().delete()
+            for sf in shoe_files:
+                ItemShoeModel.objects.create(
+                    item=item,
+                    file=sf,
+                    name=sf.name,
+                )
+
         serializer = ItemSerializer(item, context={"request": request})
         return Response(serializer.data)
 

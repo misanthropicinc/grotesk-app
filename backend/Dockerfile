@@ -11,7 +11,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN mkdir -p /app/media/pfps /app/media/logos /app/media/items /app/media/runway /app/media/shoe_models
+RUN mkdir -p /app/media/pfps /app/media/logos /app/media/items /app/media/items/colors /app/media/items/colors/webp /app/media/runway /app/media/shoe_models
 
 EXPOSE 8000
 

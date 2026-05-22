@@ -14,7 +14,7 @@
   flex-direction: row;
   flex: 1 1 0;
   min-width: 0;
-  height: calc(100vh - 71px);
+  height: calc(100vh - 75px);
   position: relative;
   overflow: hidden;
 }
@@ -59,4 +59,7 @@
   z-index: 10;
   border: 1px solid #101010;
   background: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }

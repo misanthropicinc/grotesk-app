@@ -9,10 +9,8 @@ const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 function CameraUpdater({ cameraPosition }) {
   const { camera } = useThree();
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/immutability
     camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z);
     if (camera.isPerspectiveCamera) {
-      // eslint-disable-next-line react-hooks/immutability
       camera.fov = cameraPosition.fov;
       camera.updateProjectionMatrix();
     }

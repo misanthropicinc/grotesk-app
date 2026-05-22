@@ -5,7 +5,9 @@ import Image from "next/image";
 import "./heroSection.css";
 import "./header.css";
 import HeaderMenu from "./headerMenu";
+import HeaderSearch from "./HeaderSearch";
 import logoImg from "../../imgs/grotesk-header-logo.png";
+import { getSession } from "../auth/authService";
 
 function shuffleImages(images) {
   return [...images].sort(() => Math.random() - 0.5);
@@ -37,11 +39,15 @@ export default function HeroSection({ heroImages = [] }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeBtn, setActiveBtn] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [session, setSession] = useState(null);
   const sentinelRef = useRef(null);
   const isFirstRender = useRef(true);
   const isSticky = useRef(false);
 
-  // Shuffle images only on first render to avoid hydration mismatch
+  useEffect(() => {
+    setSession(getSession());
+  }, []);
+
   useEffect(() => {
     if (heroImages.length > 0 && isFirstRender.current) {
       isFirstRender.current = false;
@@ -184,11 +190,8 @@ export default function HeroSection({ heroImages = [] }) {
                       />
                     </svg>
                   </div>
-                  <div
-                    className="header-btn"
-                    onClick={() => setActiveBtn("sneakers")}
-                  >
-                    <a>SNEAKERS</a>
+                  <div className="header-btn">
+                    <a href="/catalog?type=Sneakers&gender=Male">SNEAKERS</a>
                   </div>
                   <div
                     className="header-btn"
@@ -215,7 +218,7 @@ export default function HeroSection({ heroImages = [] }) {
                     </svg>
                   </div>
                 </div>
-                <a>ABOUT</a>
+                <a href="/about">ABOUT</a>
                 <a href="https://github.com/misanthropicinc">GITHUB</a>
               </div>
               <span className="border-nav"></span>
@@ -260,11 +263,7 @@ export default function HeroSection({ heroImages = [] }) {
                       />
                     </svg>
                     <span className="search-divider"></span>
-                    <input
-                      type="text"
-                      className="search-input"
-                      placeholder="SEARCH..."
-                    />
+                    <HeaderSearch inputClass="search-input" dropdownUp />
                   </div>
                 </div>
                 <a href="#">

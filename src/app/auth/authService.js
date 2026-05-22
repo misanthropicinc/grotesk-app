@@ -165,7 +165,6 @@ export function getSession() {
   }
 }
 
-/** Sync localStorage user lookup (always works, no API dependency). */
 export function getCurrentUser() {
   const session = getSession();
   if (!session) return null;
@@ -173,7 +172,6 @@ export function getCurrentUser() {
   return users.find((u) => u.telegram === session.telegram) || null;
 }
 
-/** Async: fetch user profile from the Django API. Falls back to localStorage. */
 export async function getCurrentUserFromApi() {
   const session = getSession();
   if (!session) return null;
@@ -194,7 +192,6 @@ export async function getCurrentUserFromApi() {
   return getCurrentUser();
 }
 
-/** Sync localStorage profile update. */
 export function updateUserProfile(telegram, updates) {
   const tg = normalizeTelegram(telegram);
   const users = getUsers();
@@ -205,7 +202,6 @@ export function updateUserProfile(telegram, updates) {
   return { success: true };
 }
 
-/** Async: save profile to Django API + localStorage. */
 export async function updateUserProfileToApi(telegram, updates) {
   const tg = normalizeTelegram(telegram);
   const local = updateUserProfile(tg, updates);
@@ -214,12 +210,42 @@ export async function updateUserProfileToApi(telegram, updates) {
     const fd = new FormData();
     if (updates.role !== undefined) fd.append("role", updates.role);
     if (updates.designerProfile?.name) fd.append("designer_name", updates.designerProfile.name);
+    if (updates.designerProfile?.logo) {
+      const blob = dataURLtoBlob(updates.designerProfile.logo);
+      if (blob) fd.append("designer_logo", new File([blob], "logo.webp", { type: blob.type }));
+    }
     const res = await fetch(`http://localhost:8000/api/users/${tg}/`, { method: "PATCH", body: fd });
     if (res.ok) return { success: true, api: true };
   } catch {}
   return local;
 }
 
+function dataURLtoBlob(url) {
+  if (!url || !url.startsWith("data:")) return null;
+  const [meta, b64] = url.split(",");
+  const mime = meta.match(/:(.*?);/)?.[1] || "application/octet-stream";
+  const bin = atob(b64);
+  const buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  return new Blob([buf], { type: mime });
+}
+
 export function getAllUsers() {
   return getUsers();
+}
+
+export function ensureAdminAccount() {
+  const users = getUsers();
+  if (!users.find((u) => u.telegram === "admin")) {
+    users.push({ telegram: "admin", password: "admin123", chatId: "", role: "superuser" });
+    saveUsers(users);
+  }
+}
+
+export function isAdmin() {
+  const session = getSession();
+  if (!session) return false;
+  if (session.telegram === "admin") return true;
+  const user = getCurrentUser();
+  return user?.role === "superuser";
 }

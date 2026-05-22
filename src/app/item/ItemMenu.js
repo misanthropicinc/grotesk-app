@@ -1,41 +1,33 @@
 import Image from "next/image";
 import "./itemmenu.css";
 
-export default function ItemMenu() {
+export default function ItemMenu({ item }) {
+  const title = item?.title?.toLowerCase() || "item";
+  const collection = item?.collection?.toLowerCase() || "";
+  const price = item ? `$ ${parseFloat(item.price || 0).toFixed(2)}` : "$ 0.00";
+  const colorNames = item ? (item.colors || []).map((c) => c.name).join("/") : "";
+  const desc = item?.description || "";
+  const brandLogo = item?.brand === "DRKSHDW" ? "/brandlogodesc.png" : null;
+
   return (
     <div className="slider-menu">
-      <Image
-        src="/brandlogodesc.png"
-        alt="Brand Logo"
-        width={247}
-        height={28}
-        className="menu-logo"
-      />
+      {brandLogo ? (
+        <Image src={brandLogo} alt="Brand Logo" width={247} height={28} className="menu-logo" />
+      ) : (
+        <div className="menu-logo-placeholder">NO LOGO</div>
+      )}
       <div className="menu-title-row">
         <div className="menu-title-texts">
-          <p className="menu-item-name">oversized hoodie</p>
-          <p className="menu-collection">ss26 temple</p>
+          <p className="menu-item-name">{title}</p>
+          {collection && <p className="menu-collection">{collection}</p>}
         </div>
-        <p className="menu-price">$ 600.00</p>
+        <p className="menu-price">{price}</p>
       </div>
       <div className="menu-description">
-        DRKSHDW SS26 TEMPLE OVERSIZED HOODIE IN BLACK/MILK FURKA HEAVY
-        SWEATSHIRT JERSEY
-        <br />
-        THIS OVERSIZED HOODIE IS HIP-LENGTH, WITH A LOOSE FIT AND LONG SLEEVES.
-        IT HAS A HOOD WITH A DRAWSTRING, RIBBED CUFFS AND WAISTBAND. IT FEATURES
-        THE SIGNATURE LEVEL SHOULDER SEAMS AND SINGLE SEAM RUNNING DOWN THE
-        CENTRE BACK SPINE. THIS HEAVYWEIGHT COTTON SWEATSHIRT JERSEY HAS A SOFT
-        AND WASHED HANDFEEL. THIS JERSEY IS GARMENT DYED. THIS FABRIC IS MADE
-        USING GOTS CERTIFIED ORGANIC COTTON WHICH MEANS THE NATURAL FIBER IS
-        GROWN WITHOUT HARMFUL CHEMICALS, LEAVING OUR SOIL, AIR AND WATER CLEANER
-        FROM CONTAMINATES.
+        {desc}
         <br />
         <br />
-        COLOR: BLACK/MILK
-        <br />
-        MATERIAL: 100% COTTON   MODEL IS 189CM TALL MODEL WEARS SIZE S TAXES AND
-        FEES INCLUDED
+        {colorNames ? `COLOR: ${colorNames}` : ""}
       </div>
     </div>
   );

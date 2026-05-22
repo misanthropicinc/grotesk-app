@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import SearchBarComponent from "../SearchBarComponent";
 import ItemCard from "./itemCard";
 import "./page.css";
@@ -17,6 +18,7 @@ const garmentTypes = ["T-Shirt", "Hoodie", "Sweatshirt", "Jacket", "Coat", "Blaz
 
 const DEFAULT_ITEMS = [
   {
+    id: "admin_hoodie_placeholder",
     title: "OVERSIZED HOODIE",
     brand: "DRKSHDW",
     price: "600",
@@ -99,6 +101,7 @@ function getLocalItems() {
 }
 
 export default function Catalog() {
+  const searchParams = useSearchParams();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [menuStyle, setMenuStyle] = useState({ top: 0, height: "100vh" });
   const [searchText, setSearchText] = useState("");
@@ -110,24 +113,47 @@ export default function Catalog() {
   const [filterCondition, setFilterCondition] = useState("");
   const [filterPriceFrom, setFilterPriceFrom] = useState("");
   const [filterPriceTo, setFilterPriceTo] = useState("");
+  const [localItems, setLocalItems] = useState([]);
+
+  useEffect(() => {
+    const gender = searchParams.get("gender");
+    const type = searchParams.get("type");
+    const designer = searchParams.get("designer");
+    const q = searchParams.get("q");
+    if (gender) setFilterGender(gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase());
+    if (type) {
+      const formatted = type.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+      setFilterType(formatted);
+    }
+    if (designer) setFilterBrand(designer);
+    if (q) setSearchText(q);
+    setLocalItems(getLocalItems());
+  }, []);
 
   const isShoes = filterType.toLowerCase().includes("shoe");
 
   const allItems = useMemo(() => {
-    const local = getLocalItems();
-    return [...DEFAULT_ITEMS, ...local.map((i) => ({
-      title: i.title,
-      brand: i.brand,
-      price: i.price,
-      type: i.type,
-      gender: i.gender,
-      condition: i.condition,
-      size: i.size,
-      color: i.color,
-      sellerCountry: i.sellerCountry,
-      image: i.images?.[0] || "",
-    }))];
-  }, []);
+    const defaultIds = new Set(DEFAULT_ITEMS.map((d) => d.id).filter(Boolean));
+    const merged = [...DEFAULT_ITEMS];
+    for (const i of localItems) {
+      if (!defaultIds.has(i.id)) {
+        merged.push({
+          id: i.id,
+          title: i.title,
+          brand: i.brand,
+          price: i.price,
+          type: i.type,
+          gender: i.gender,
+          condition: i.condition,
+          size: i.size,
+          color: i.color || i.colors?.[0]?.name || "",
+          sellerCountry: i.sellerCountry,
+          image: i.colors?.[0]?.images?.[0] || i.images?.[0] || "",
+        });
+      }
+    }
+    return merged;
+  }, [localItems]);
 
   const filteredItems = useMemo(() => {
     return allItems.filter((item) => {
@@ -145,7 +171,7 @@ export default function Catalog() {
       if (filterPriceTo && price > parseFloat(filterPriceTo)) return false;
       return true;
     });
-  }, [allItems, searchText, filterCountry, filterSize, filterType, filterBrand, filterGender, filterCondition, filterPriceFrom, filterPriceTo]);
+  }, [allItems, searchText, filterCountry, filterSize, filterType, filterBrand, filterGender, filterCondition, filterPriceFrom, filterPriceTo, localItems]);
 
   useEffect(() => {
     const update = () => {
@@ -269,11 +295,15 @@ export default function Catalog() {
           ) : (
             filteredItems.map((item, i) => (
               <ItemCard
-                key={i}
+                key={item.id || i}
+                id={item.id}
                 title={item.title}
                 brand={item.brand}
                 price={item.price}
                 image={item.image}
+                collection={item.collection}
+                postedByRole={item.postedByRole}
+                postedByName={item.postedByName}
               />
             ))
           )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { login, getSession } from "./authService";
 import ForgotModal from "./ForgotModal";
 import ScanChatModal from "./ScanChatModal";
@@ -21,8 +21,9 @@ function useAuthRedirect() {
 
 export default function AuthCard() {
   const session = useAuthRedirect();
+  const searchParams = useSearchParams();
   const [forgotOpen, setForgotOpen] = useState(false);
-  const [isRegister, setIsRegister] = useState(false);
+  const [isRegister, setIsRegister] = useState(searchParams.get("mode") === "signup");
   const [telegram, setTelegram] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

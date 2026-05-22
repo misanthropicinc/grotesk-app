@@ -1,11 +1,19 @@
 from rest_framework import serializers
-from .models import Item, ItemImage, ItemShoeModel, Favorite
+from .models import Item, ItemColor, ItemColorImage, ItemShoeModel, Favorite
 
 
-class ItemImageSerializer(serializers.ModelSerializer):
+class ItemColorImageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ItemImage
+        model = ItemColorImage
         fields = ["id", "image", "webp"]
+
+
+class ItemColorSerializer(serializers.ModelSerializer):
+    images = ItemColorImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ItemColor
+        fields = ["id", "name", "hex", "order", "images"]
 
 
 class ItemShoeModelSerializer(serializers.ModelSerializer):
@@ -15,18 +23,18 @@ class ItemShoeModelSerializer(serializers.ModelSerializer):
 
 
 class ItemSerializer(serializers.ModelSerializer):
-    images = ItemImageSerializer(many=True, read_only=True)
+    colors = ItemColorSerializer(many=True, read_only=True)
     shoe_models = ItemShoeModelSerializer(many=True, read_only=True)
     is_favorited = serializers.SerializerMethodField()
 
     class Meta:
         model = Item
         fields = [
-            "id", "title", "brand", "price", "description", "type",
-            "gender", "condition", "size", "custom_size", "shoe_standard",
-            "color_name", "color_hex", "country", "seller_telegram",
+            "id", "title", "brand", "price", "description", "collection",
+            "type", "gender", "condition", "size", "custom_size",
+            "shoe_standard", "country", "seller_telegram",
             "is_resale", "designer_telegram", "created_at",
-            "images", "shoe_models", "is_favorited",
+            "colors", "shoe_models", "is_favorited",
         ]
 
     def get_is_favorited(self, obj):

@@ -66,6 +66,13 @@ def user_detail(request, telegram):
         return Response(serializer.data)
 
 
+@api_view(["GET"])
+def designers_list(request):
+    designers = UserProfile.objects.filter(role="designer")
+    serializer = UserProfileSerializer(designers, many=True)
+    return Response(serializer.data)
+
+
 @api_view(["POST"])
 def upload_runway_gif(request, telegram):
     try:

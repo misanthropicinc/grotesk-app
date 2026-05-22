@@ -68,6 +68,7 @@ export default function PageHeaderMenu({
                   key={i}
                   title={cat.title}
                   items={cat.items}
+                  gender={category === "womenswear" ? "female" : "male"}
                 />
               ))}
             </div>

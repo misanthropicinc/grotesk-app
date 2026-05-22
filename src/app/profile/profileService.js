@@ -18,7 +18,6 @@ function saveItems(items) {
   localStorage.setItem(ITEMS_KEY, JSON.stringify(items));
 }
 
-/** Sync localStorage add (always works). */
 export function addItem(item) {
   const items = getItems();
   const newItem = {
@@ -29,18 +28,25 @@ export function addItem(item) {
   items.push(newItem);
   saveItems(items);
 
-  // Fire-and-forget: try API
   if (!shouldUseLocalFallback()) {
     const fd = new FormData();
     Object.entries(newItem).forEach(([k, v]) => {
-      if (k !== "images" && k !== "shoeModels" && v !== undefined && v !== null) {
+      if (k !== "colors" && k !== "shoeModels" && v !== undefined && v !== null) {
         fd.append(k, String(v));
       }
     });
-    if (newItem.images?.length) {
-      newItem.images.forEach((url, i) => {
-        const blob = dataURLtoBlob(url);
-        if (blob) fd.append("images", new File([blob], `img_${i}.webp`, { type: blob.type }));
+    if (newItem.colors?.length) {
+      const colorsPayload = newItem.colors.map((c) => ({
+        name: c.name,
+        hex: c.hex,
+        imageCount: c.images?.length || 0,
+      }));
+      fd.append("colors", JSON.stringify(colorsPayload));
+      newItem.colors.forEach((c) => {
+        (c.images || []).forEach((url) => {
+          const blob = dataURLtoBlob(url);
+          if (blob) fd.append("images", new File([blob], `img.webp`, { type: blob.type }));
+        });
       });
     }
     fetch("http://localhost:8000/api/items/", { method: "POST", body: fd }).catch(() => {});
@@ -53,7 +59,6 @@ export function getUserItems(telegram) {
   return getItems().filter((i) => i.postedBy === telegram);
 }
 
-/** Async: fetch user items from API + localStorage. */
 export async function getUserItemsFromApi(telegram) {
   const local = getUserItems(telegram);
   try {
@@ -61,6 +66,82 @@ export async function getUserItemsFromApi(telegram) {
     if (data && data.length) return data;
   } catch {}
   return local;
+}
+
+export function getItemById(itemId) {
+  return getItems().find((i) => i.id === itemId) || null;
+}
+
+export function updateItem(itemId, updates) {
+  const items = getItems();
+  const idx = items.findIndex((i) => i.id === itemId);
+  if (idx === -1) return null;
+  items[idx] = { ...items[idx], ...updates };
+  saveItems(items);
+  if (!shouldUseLocalFallback()) {
+    const fd = new FormData();
+    const updated = items[idx];
+    Object.entries(updated).forEach(([k, v]) => {
+      if (k !== "colors" && k !== "shoeModels" && v !== undefined && v !== null) {
+        fd.append(k, String(v));
+      }
+    });
+    if (updated.colors?.length) {
+      const colorsPayload = updated.colors.map((c) => ({
+        name: c.name,
+        hex: c.hex,
+        imageCount: c.images?.length || 0,
+      }));
+      fd.append("colors", JSON.stringify(colorsPayload));
+      updated.colors.forEach((c) => {
+        (c.images || []).forEach((url) => {
+          const blob = dataURLtoBlob(url);
+          if (blob) fd.append("images", new File([blob], `img.webp`, { type: blob.type }));
+        });
+      });
+    }
+    fetch(`http://localhost:8000/api/items/${itemId}/`, { method: "PATCH", body: fd }).catch(() => {});
+  }
+  return items[idx];
+}
+
+export function seedDefaultItem() {
+  const items = getItems();
+  if (items.some((i) => i.id === "admin_hoodie_placeholder")) return;
+  const newItem = {
+    id: "admin_hoodie_placeholder",
+    title: "OVERSIZED HOODIE",
+    brand: "DRKSHDW",
+    price: "600",
+    description: "DRKSHDW SS26 TEMPLE OVERSIZED HOODIE IN BLACK/MILK FURKA HEAVY SWEATSHIRT JERSEY. HIP-LENGTH, LOOSE FIT, LONG SLEEVES. HOOD WITH DRAWSTRING, RIBBED CUFFS AND WAISTBAND. SIGNATURE LEVEL SHOULDER SEAMS. HEAVYWEIGHT GOTS CERTIFIED ORGANIC COTTON.",
+    collection: "ss26 temple",
+    type: "Hoodie",
+    gender: "Male",
+    condition: "New",
+    size: "S, M, L, XL",
+    sellerCountry: "United States",
+    postedBy: "admin",
+    postedByRole: "superuser",
+    postedByName: "ADMIN",
+    thumbnailIndex: 0,
+    colors: [
+      {
+        name: "Black/Milk",
+        hex: "#000000",
+        images: [
+          "/imgs/presetitemimg1.webp",
+          "/imgs/presetitemimg2.webp",
+          "/imgs/presetitemimg3.webp",
+          "/imgs/presetitemimg4.webp",
+          "/imgs/presetitemimg5.webp",
+          "/imgs/presetitemimg6.webp",
+        ],
+      },
+    ],
+    createdAt: new Date().toISOString(),
+  };
+  items.push(newItem);
+  saveItems(items);
 }
 
 export function deleteItem(itemId) {

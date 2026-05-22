@@ -1,16 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import "./header.css";
 import "./heroSection.css";
 import HeaderMenu from "./headerMenu";
+import HeaderSearch from "./HeaderSearch";
 import logoImg from "../../imgs/grotesk-header-logo.png";
+import { getSession } from "../auth/authService";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeBtn, setActiveBtn] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [session, setSession] = useState(null);
+
+  useEffect(() => {
+    setSession(getSession());
+  }, []);
 
   return (
     <div
@@ -27,7 +34,7 @@ export default function Header() {
         style={{ position: "relative", bottom: "auto", top: "auto" }}
       >
         <nav>
-          <a href="/home" className="grotesk-header-logo">
+          <a href="/" className="grotesk-header-logo">
             <Image
               src={logoImg}
               width={71}
@@ -85,11 +92,8 @@ export default function Header() {
                     />
                   </svg>
                 </div>
-                <div
-                  className="header-btn"
-                  onClick={() => setActiveBtn("sneakers")}
-                >
-                  <a>SNEAKERS</a>
+                <div className="header-btn">
+                  <a href="/catalog?type=Sneakers&gender=Male">SNEAKERS</a>
                 </div>
                 <div
                   className="header-btn"
@@ -116,7 +120,7 @@ export default function Header() {
                   </svg>
                 </div>
               </div>
-              <a>ABOUT</a>
+              <a href="/about">ABOUT</a>
               <a href="https://github.com/misanthropicinc">GITHUB</a>
             </div>
             <span className="border-nav"></span>
@@ -159,11 +163,7 @@ export default function Header() {
                     />
                   </svg>
                   <span className="search-divider"></span>
-                  <input
-                    type="text"
-                    className="search-input"
-                    placeholder="SEARCH..."
-                  />
+                  <HeaderSearch inputClass="search-input" dropdownUp />
                 </div>
               </div>
               <a href="#">
@@ -184,23 +184,30 @@ export default function Header() {
                   />
                 </svg>
               </a>
-            <a href="/profile">
-               <svg
-                 className="header-icn"
-                 width="14"
-                 height="14"
-                 viewBox="0 0 15 15"
-                 fill="none"
-                 xmlns="http://www.w3.org/2000/svg"
-               >
-                 <path
-                   d="M10.9766 12.5357C10.0321 11.4808 8.65975 10.817 7.13235 10.817C5.60495 10.817 4.23248 11.4808 3.28795 12.5357M7.13235 13.7647C3.46941 13.7647 0.5 10.7953 0.5 7.13235C0.5 3.46941 3.46941 0.5 7.13235 0.5C10.7953 0.5 13.7647 3.46941 13.7647 7.13235C13.7647 10.7953 10.7953 13.7647 7.13235 13.7647ZM7.13235 8.60621C5.91137 8.60621 4.92157 7.61641 4.92157 6.39542C4.92157 5.17444 5.91137 4.18464 7.13235 4.18464C8.35334 4.18464 9.34314 5.17444 9.34314 6.39542C9.34314 7.61641 8.35334 8.60621 7.13235 8.60621Z"
-                   stroke="white"
-                   strokeLinecap="round"
-                   strokeLinejoin="round"
-                 />
-               </svg>
-             </a>
+            {session ? (
+              <a href="/profile">
+                <svg
+                  className="header-icn"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 15 15"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M10.9766 12.5357C10.0321 11.4808 8.65975 10.817 7.13235 10.817C5.60495 10.817 4.23248 11.4808 3.28795 12.5357M7.13235 13.7647C3.46941 13.7647 0.5 10.7953 0.5 7.13235C0.5 3.46941 3.46941 0.5 7.13235 0.5C10.7953 0.5 13.7647 3.46941 13.7647 7.13235C13.7647 10.7953 10.7953 13.7647 7.13235 13.7647ZM7.13235 8.60621C5.91137 8.60621 4.92157 7.61641 4.92157 6.39542C4.92157 5.17444 5.91137 4.18464 7.13235 4.18464C8.35334 8.18464 9.34314 5.17444 9.34314 6.39542C9.34314 7.61641 8.35334 8.60621 7.13235 8.60621Z"
+                    stroke="white"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </a>
+            ) : (
+              <>
+                <a href="/auth?mode=signup" className="header-auth-btn">SIGN UP</a>
+                <a href="/auth?mode=login" className="header-auth-btn">LOG IN</a>
+              </>
+            )}
             </div>
           </div>
         </nav>

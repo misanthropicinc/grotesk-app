@@ -37,12 +37,14 @@ export default function DesignerCard({ id, isHovered, isAnyHovered, onHover, onL
   const posterSrc = imgSrc.replace('.webm', '-poster.webp');
 
   return (
-    <div 
+    <a
       ref={cardRef}
-      id={id} 
+      id={id}
+      href="/catalog"
       className={`designerCard ${isHovered ? "hovered" : ""}`}
       onMouseEnter={onHover}
       onMouseLeave={onLeave}
+      style={{ textDecoration: "none", color: "inherit" }}
     >
       <video 
         ref={videoRef} 
@@ -55,6 +57,6 @@ export default function DesignerCard({ id, isHovered, isAnyHovered, onHover, onL
       />
       <div className="overlay" />
       <p>DESIGNER</p>
-    </div>
+    </a>
   );
 }

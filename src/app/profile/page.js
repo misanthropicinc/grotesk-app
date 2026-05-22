@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import PageHeader from "../mainPage/PageHeader";
 import Breadcrumbs from "../breadcrumbs";
 import {
@@ -9,6 +9,8 @@ import {
   getCurrentUser,
   logout,
   updateUserProfile,
+  ensureAdminAccount,
+  isAdmin,
 } from "../auth/authService";
 import {
   addItem,
@@ -19,7 +21,11 @@ import {
   removeFavorite,
   getFavorites,
   convertFileToDataURL,
+  updateItem,
+  getItemById,
+  seedDefaultItem,
 } from "./profileService";
+import { getUserOrders } from "../orders/ordersService";
 import "./profile.css";
 
 const COUNTRIES = [
@@ -31,14 +37,102 @@ const GARMENT_TYPES = [
 ];
 
 const CLOTHING_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+const BOTTOM_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "28", "29", "30", "31", "32", "33", "34", "35", "36", "38", "40", "42", "44"];
+const ACCESSORY_SIZES = ["OS", "XS", "S", "M", "L", "XL", "XXL"];
 const SHOE_SIZES = ["36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46"];
 const SHOE_STANDARDS = ["EU", "US", "IT", "RU"];
 const GENDERS = ["Male", "Female", "Unisex"];
 const CONDITIONS = ["New", "Like New", "Good", "Fair", "Poor"];
 
+const BOTTOM_TYPES = ["Jeans", "Trousers", "Shorts", "Sweatpants", "Cargo Pants", "Skirt"];
+const ACCESSORY_TYPES = ["Hat", "Cap", "Beanie", "Scarf", "Gloves", "Belt", "Tie", "Socks"];
+
 function isShoeType(type) {
   return ["shoe", "sneaker", "boot", "sandal"].some((kw) =>
     type.toLowerCase().includes(kw)
+  );
+}
+
+function getSizeOptions(type) {
+  if (isShoeType(type)) return [...SHOE_SIZES, "CUSTOM"];
+  if (BOTTOM_TYPES.includes(type)) return [...BOTTOM_SIZES, "CUSTOM"];
+  if (ACCESSORY_TYPES.includes(type)) return [...ACCESSORY_SIZES, "CUSTOM"];
+  return [...CLOTHING_SIZES, "CUSTOM"];
+}
+
+function MultiSizeSelect({ selected, onChange, options }) {
+  const [showCustom, setShowCustom] = useState(false);
+  const [customInput, setCustomInput] = useState("");
+
+  function toggle(opt) {
+    if (selected.includes(opt)) {
+      onChange(selected.filter((s) => s !== opt));
+    } else {
+      onChange([...selected, opt]);
+    }
+  }
+
+  function addCustom() {
+    const val = customInput.trim();
+    if (!val) return;
+    if (!selected.includes(val)) {
+      onChange([...selected, val]);
+    }
+    setCustomInput("");
+    setShowCustom(false);
+  }
+
+  function remove(val) {
+    onChange(selected.filter((s) => s !== val));
+  }
+
+  const standardOpts = options.filter((o) => o !== "CUSTOM");
+
+  return (
+    <div>
+      <div className="profile-size-grid">
+        {standardOpts.map((opt) => (
+          <button
+            key={opt}
+            type="button"
+            className={`profile-size-btn ${selected.includes(opt) ? "active" : ""}`}
+            onClick={() => toggle(opt)}
+          >
+            {opt}
+          </button>
+        ))}
+        <button
+          type="button"
+          className={`profile-size-btn ${showCustom ? "active" : ""}`}
+          onClick={() => setShowCustom((v) => !v)}
+        >
+          + CUSTOM
+        </button>
+      </div>
+      {showCustom && (
+        <div className="profile-custom-size-row">
+          <input
+            className="profile-input"
+            type="text"
+            placeholder="Enter custom size"
+            value={customInput}
+            onChange={(e) => setCustomInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustom(); } }}
+          />
+          <button type="button" className="profile-custom-size-add" onClick={addCustom}>ADD</button>
+        </div>
+      )}
+      {selected.length > 0 && (
+        <div className="profile-size-chips">
+          {selected.map((s) => (
+            <span key={s} className="profile-size-chip">
+              {s}
+              <button type="button" className="profile-size-chip-x" onClick={() => remove(s)}>×</button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -112,10 +206,12 @@ function SearchableSelect({ value, onChange, options, placeholder, style }) {
 
 export default function ProfilePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
   const [userItems, setUserItems] = useState([]);
   const [favItems, setFavItems] = useState([]);
+  const [orderItems, setOrderItems] = useState([]);
   const [message, setMessage] = useState(null);
 
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -127,29 +223,29 @@ export default function ProfilePage() {
   const [designerName, setDesignerName] = useState("");
   const [designerLogoPreview, setDesignerLogoPreview] = useState(null);
   const [runwayGifs, setRunwayGifs] = useState([]);
+  const [designerGenre, setDesignerGenre] = useState("");
   const [saving, setSaving] = useState(false);
 
   const [itemTitle, setItemTitle] = useState("");
   const [itemBrand, setItemBrand] = useState("");
   const [itemPrice, setItemPrice] = useState("");
   const [itemDescription, setItemDescription] = useState("");
+  const [itemCollection, setItemCollection] = useState("");
   const [itemType, setItemType] = useState("");
   const [itemGender, setItemGender] = useState("");
   const [itemCondition, setItemCondition] = useState("");
-  const [itemSize, setItemSize] = useState("");
-  const [itemCustomSize, setItemCustomSize] = useState("");
-  const [itemColorName, setItemColorName] = useState("");
-  const [itemColorHex, setItemColorHex] = useState("#000000");
+  const [itemSizes, setItemSizes] = useState([]);
+  const [itemCustomSizes, setItemCustomSizes] = useState([]);
+  const [itemColors, setItemColors] = useState([]);
   const [itemCountry, setItemCountry] = useState("");
   const [itemShoeStandard, setItemShoeStandard] = useState("");
-  const [itemImages, setItemImages] = useState([]);
-  const [itemImagePreviews, setItemImagePreviews] = useState([]);
   const [itemShoeModels, setItemShoeModels] = useState([]);
   const [postAs, setPostAs] = useState("");
+  const [editingItem, setEditingItem] = useState(null);
+  const [itemThumbnailIndex, setItemThumbnailIndex] = useState(0);
 
   const pfpInputRef = useRef(null);
   const gifInputRef = useRef(null);
-  const fileInputRef = useRef(null);
   const shoeFileInputRef = useRef(null);
   const menuOpenRef = useRef(false);
 
@@ -166,6 +262,8 @@ export default function ProfilePage() {
       return;
     }
     setSession(s);
+    ensureAdminAccount();
+    seedDefaultItem();
     const u = getCurrentUser();
     setUser(u);
     if (u) {
@@ -178,12 +276,19 @@ export default function ProfilePage() {
       }
       setUserItems(getUserItems(s.telegram));
       setFavItems(getFavoriteItems(s.telegram));
+      setOrderItems(getUserOrders(s.telegram));
+    }
+    const editId = searchParams.get("editItemId");
+    if (editId) {
+      const item = getItemById(editId);
+      if (item && (item.postedBy === s.telegram || isAdmin())) {
+        openEditItem(item);
+      }
     }
   }, []);
 
   const isShoe = isShoeType(itemType);
-  const sizes = isShoe ? SHOE_SIZES : CLOTHING_SIZES;
-  const sizeOptions = useMemo(() => [...sizes, "CUSTOM"], [sizes]);
+  const sizeOptions = useMemo(() => getSizeOptions(itemType), [itemType]);
 
   useEffect(() => {
     if (menuOpenRef.current) {
@@ -286,13 +391,45 @@ export default function ProfilePage() {
   }
 
   function openAddItem() {
+    setEditingItem(null);
     setItemTitle(""); setItemBrand(""); setItemPrice(""); setItemDescription("");
+    setItemCollection("");
     setItemType(""); setItemGender(""); setItemCondition("");
-    setItemSize(""); setItemCustomSize(""); setItemColorName(""); setItemColorHex("#000000");
-    setItemCountry(""); setItemShoeStandard("");
-    setItemImages([]); setItemImagePreviews([]); setItemShoeModels([]);
+    setItemSizes([]); setItemCustomSizes([]); setItemShoeStandard("");
+    setItemColors([]);
+    setItemCountry(""); setItemShoeModels([]);
+    setItemThumbnailIndex(0);
     setPostAs("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (shoeFileInputRef.current) shoeFileInputRef.current.value = "";
+    recalcMenuPos();
+    menuOpenRef.current = true;
+    setAddItemOpen(true);
+  }
+
+  function openEditItem(item) {
+    setEditingItem(item);
+    setItemTitle(item.title || "");
+    setItemBrand(item.brand || "");
+    setItemPrice(String(item.price || ""));
+    setItemDescription(item.description || "");
+    setItemCollection(item.collection || "");
+    setItemType(item.type || "");
+    setItemGender(item.gender || "");
+    setItemCondition(item.condition || "");
+    setItemSizes(item.size ? item.size.split(",").map((s) => s.trim()).filter(Boolean) : []);
+    setItemCustomSizes([]);
+    setItemShoeStandard(item.shoeStandard || "");
+    setItemCountry(item.sellerCountry || "");
+    setPostAs(item.postedByRole === "designer" ? "designer" : item.postedByRole === "resaler" ? "resaler" : "");
+    const colors = (item.colors || []).map((c) => ({
+      name: c.name,
+      hex: c.hex,
+      images: c.images || [],
+      previews: (c.images || []).slice(),
+    }));
+    setItemColors(colors);
+    setItemThumbnailIndex(item.thumbnailIndex ?? 0);
+    setItemShoeModels(item.shoeModels || []);
     if (shoeFileInputRef.current) shoeFileInputRef.current.value = "";
     recalcMenuPos();
     menuOpenRef.current = true;
@@ -302,35 +439,50 @@ export default function ProfilePage() {
   function closeAddItem() {
     menuOpenRef.current = false;
     setAddItemOpen(false);
+    setEditingItem(null);
   }
 
-  async function handleItemImagesUpload(e) {
-    const files = Array.from(e.target.files);
-    const remaining = 10 - itemImages.length;
-    if (files.length > remaining) showMessage(`Maximum 10 images. You can add ${remaining} more.`);
-    for (const f of files.slice(0, remaining)) {
+  function addColorBlock() {
+    setItemColors((prev) => [...prev, { name: "", hex: "#000000", images: [], previews: [] }]);
+  }
+
+  function updateColor(index, field, value) {
+    setItemColors((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  }
+
+  async function addColorImages(index, files) {
+    for (const f of Array.from(files)) {
       const url = await convertFileToDataURL(f);
-      setItemImages((prev) => [...prev, url]);
-      setItemImagePreviews((prev) => [...prev, url]);
+      setItemColors((prev) => {
+        const updated = [...prev];
+        updated[index] = {
+          ...updated[index],
+          images: [...updated[index].images, url],
+          previews: [...updated[index].previews, url],
+        };
+        return updated;
+      });
     }
   }
 
-  function removeItemImage(index) {
-    setItemImages((prev) => prev.filter((_, i) => i !== index));
-    setItemImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  function removeColorImage(colorIndex, imageIndex) {
+    setItemColors((prev) => {
+      const updated = [...prev];
+      updated[colorIndex] = {
+        ...updated[colorIndex],
+        images: updated[colorIndex].images.filter((_, i) => i !== imageIndex),
+        previews: updated[colorIndex].previews.filter((_, i) => i !== imageIndex),
+      };
+      return updated;
+    });
   }
 
-  async function handleShoeModelUpload(e) {
-    const files = Array.from(e.target.files);
-    const newModels = [];
-    for (const f of files) {
-      newModels.push({ name: f.name, url: await convertFileToDataURL(f) });
-    }
-    setItemShoeModels((prev) => [...prev, ...newModels]);
-  }
-
-  function removeItemShoeModel(index) {
-    setItemShoeModels((prev) => prev.filter((_, i) => i !== index));
+  function removeColorBlock(index) {
+    setItemColors((prev) => prev.filter((_, i) => i !== index));
   }
 
   function handleSubmitItem(e) {
@@ -344,11 +496,12 @@ export default function ProfilePage() {
     if (!itemGender) return showMessage("Gender is required");
     if (!itemCondition) return showMessage("Condition is required");
 
-    const finalSize = itemSize === "CUSTOM" ? itemCustomSize.trim() : itemSize;
-    if (!finalSize) return showMessage("Size is required");
-    if (!itemColorName.trim()) return showMessage("Color is required");
+    if (itemSizes.length === 0) return showMessage("At least one size is required");
     if (!itemCountry) return showMessage("Seller country is required");
     if (isShoe && !itemShoeStandard) return showMessage("Shoe standard is required (EU/US/IT/RU)");
+
+    const validColors = itemColors.filter((c) => c.name.trim());
+    if (validColors.length === 0) return showMessage("At least one color with a name is required");
 
     let postedByRole = role;
     let postedByName = session.telegram;
@@ -363,27 +516,38 @@ export default function ProfilePage() {
       postedByName = getCurrentUser()?.designerProfile?.name || session.telegram;
     }
 
-    addItem({
+    const itemData = {
       title: itemTitle.trim(),
       brand: itemBrand.trim(),
       price: itemPrice.trim(),
       description: itemDescription.trim(),
+      collection: itemCollection.trim(),
       type: itemType,
       gender: itemGender,
       condition: itemCondition,
-      size: finalSize,
+      size: itemSizes.join(", "),
       shoeStandard: isShoe ? itemShoeStandard : "",
-      color: itemColorName.trim(),
-      colorHex: itemColorHex,
+      colors: validColors.map((c) => ({
+        name: c.name.trim(),
+        hex: c.hex,
+        images: c.images,
+      })),
       sellerCountry: itemCountry,
-      images: itemImages,
       shoeModels: itemShoeModels,
       postedBy: session.telegram,
       postedByRole,
       postedByName,
-    });
+      thumbnailIndex: itemThumbnailIndex,
+    };
 
-    showMessage("Item posted successfully", "success");
+    if (editingItem) {
+      updateItem(editingItem.id, itemData);
+      showMessage("Item updated successfully", "success");
+    } else {
+      addItem(itemData);
+      showMessage("Item posted successfully", "success");
+    }
+
     setUserItems(getUserItems(session.telegram));
     closeAddItem();
   }
@@ -407,6 +571,18 @@ export default function ProfilePage() {
       addFavorite(session.telegram, itemId);
     }
     setFavItems(getFavoriteItems(session.telegram));
+  }
+
+  function totalImages() {
+    return itemColors.reduce((sum, c) => sum + c.images.length, 0);
+  }
+
+  function flatImageIndex(colorIdx, imageIdx) {
+    let idx = 0;
+    for (let c = 0; c < colorIdx; c++) {
+      idx += (itemColors[c]?.images?.length || 0);
+    }
+    return idx + imageIdx;
   }
 
   return (
@@ -438,7 +614,7 @@ export default function ProfilePage() {
               NEW ITEM
             </button>
             <button className="profile-action-btn" onClick={openSettings}>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" stroke="currentColor" strokeWidth="1.2"/><path d="M12 8h3M1 8h3M8 1v3M8 12v3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               SETTINGS
             </button>
             <button className="profile-logout-btn" onClick={handleLogout}>LOG OUT</button>
@@ -471,16 +647,22 @@ export default function ProfilePage() {
           {favItems.length === 0 ? (
             <p className="profile-empty">No favorited items yet.</p>
           ) : (
-            <div className="profile-grid">
+            <div className="profile-mini-grid">
               {favItems.map((item) => (
-                <div key={item.id} className="profile-grid-card">
-                  <div className="profile-grid-card-img">
-                    {item.images[0] ? <img src={item.images[0]} alt={item.title} /> : <div className="profile-grid-noimg">NO IMAGE</div>}
+                <div key={item.id} className="profile-mini-card" onClick={() => router.push(`/item?id=${item.id}`)}>
+                  <div className="profile-mini-card-img">
+                    {item.colors?.[0]?.images?.[0] ? (
+                      <img src={item.colors[0].images[0]} alt={item.title} />
+                    ) : item.images?.[0] ? (
+                      <img src={item.images[0]} alt={item.title} />
+                    ) : (
+                      <div className="profile-mini-noimg">NO IMAGE</div>
+                    )}
                   </div>
-                  <div className="profile-grid-card-info">
-                    <p className="profile-grid-card-title">{item.title}</p>
-                    <p className="profile-grid-card-brand">{item.brand}</p>
-                    <p className="profile-grid-card-price">${item.price}</p>
+                  <div className="profile-mini-card-info">
+                    <p className="profile-mini-card-title">{item.title}</p>
+                    <p className="profile-mini-card-brand">{item.brand}</p>
+                    <p className="profile-mini-card-price">${item.price}</p>
                   </div>
                 </div>
               ))}
@@ -497,17 +679,49 @@ export default function ProfilePage() {
               {userItems.map((item) => (
                 <div key={item.id} className="profile-grid-card">
                   <div className="profile-grid-card-img">
-                    {item.images[0] ? <img src={item.images[0]} alt={item.title} /> : <div className="profile-grid-noimg">NO IMAGE</div>}
+                    {item.colors?.[0]?.images?.[0] ? (
+                      <img src={item.colors[0].images[0]} alt={item.title} />
+                    ) : item.images?.[0] ? (
+                      <img src={item.images[0]} alt={item.title} />
+                    ) : (
+                      <div className="profile-grid-noimg">NO IMAGE</div>
+                    )}
                   </div>
                   <div className="profile-grid-card-info">
                     <p className="profile-grid-card-title">{item.title}</p>
                     <p className="profile-grid-card-brand">{item.brand}</p>
                     <p className="profile-grid-card-price">${item.price}</p>
                     <div className="profile-grid-card-meta">
-                      <span className="profile-grid-card-role">{item.postedByRole.toUpperCase()}</span>
+                      <span className="profile-grid-card-role">{item.postedByRole?.toUpperCase()}</span>
                       {item.size && <span className="profile-grid-card-size">{item.size}</span>}
+                      {item.collection && <span className="profile-grid-card-collection">{item.collection}</span>}
                     </div>
-                    <button className="profile-item-delete" onClick={() => handleDeleteItem(item.id)}>DELETE</button>
+                    <div className="profile-grid-card-actions">
+                      <button className="profile-item-edit" onClick={() => openEditItem(item)}>EDIT</button>
+                      <button className="profile-item-delete" onClick={() => handleDeleteItem(item.id)}>DELETE</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="profile-section">
+          <h2 className="profile-section-title">ORDERS ({orderItems.length})</h2>
+          {orderItems.length === 0 ? (
+            <p className="profile-empty">No orders yet.</p>
+          ) : (
+            <div className="profile-orders-list">
+              {orderItems.map((order) => (
+                <div key={order.id} className="profile-order-card" onClick={() => router.push(`/order?id=${order.id}`)}>
+                  <div className="profile-order-left">
+                    <p className="profile-order-id">{order.id}</p>
+                    <p className="profile-order-total">${(order.total || 0).toLocaleString()}</p>
+                  </div>
+                  <div className="profile-order-right">
+                    <span className={`profile-order-status profile-order-status--${order.status}`}>{order.status.toUpperCase()}</span>
+                    <span className="profile-order-date">{new Date(order.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
               ))}
@@ -584,7 +798,7 @@ export default function ProfilePage() {
       <div className={`profile-slide-menu ${addItemOpen ? "open" : ""}`} style={{ top: menuStyle.top, height: menuStyle.height }}>
         <div className="profile-slide-inner">
           <div className="profile-slide-header">
-            <h3>NEW ITEM</h3>
+            <h3>{editingItem ? "EDIT ITEM" : "NEW ITEM"}</h3>
             <button className="profile-slide-close" onClick={closeAddItem}>×</button>
           </div>
 
@@ -606,6 +820,10 @@ export default function ProfilePage() {
               <textarea className="profile-textarea" placeholder="Item description" value={itemDescription} onChange={(e) => setItemDescription(e.target.value)} />
             </div>
             <div className="profile-field">
+              <label className="profile-label">COLLECTION</label>
+              <input className="profile-input" type="text" placeholder="e.g. SS26 Temple" value={itemCollection} onChange={(e) => setItemCollection(e.target.value)} />
+            </div>
+            <div className="profile-field">
               <label className="profile-label">TYPE *</label>
               <SearchableSelect value={itemType} onChange={(e) => { setItemType(e.target.value); setItemSize(""); setItemShoeStandard(""); }} options={GARMENT_TYPES} placeholder="SELECT TYPE" />
             </div>
@@ -618,11 +836,8 @@ export default function ProfilePage() {
               <SearchableSelect value={itemCondition} onChange={(e) => setItemCondition(e.target.value)} options={CONDITIONS} placeholder="SELECT CONDITION" />
             </div>
             <div className="profile-field">
-              <label className="profile-label">SIZE *</label>
-              <SearchableSelect value={itemSize} onChange={(e) => setItemSize(e.target.value)} options={sizeOptions} placeholder="SELECT SIZE" />
-              {itemSize === "CUSTOM" && (
-                <input className="profile-input profile-input-sm" type="text" placeholder="Enter custom size" value={itemCustomSize} onChange={(e) => setItemCustomSize(e.target.value)} style={{ marginTop: 6 }} />
-              )}
+              <label className="profile-label">SIZE(S) *</label>
+              <MultiSizeSelect selected={itemSizes} onChange={setItemSizes} options={sizeOptions} />
             </div>
             {isShoe && (
               <div className="profile-field">
@@ -631,11 +846,40 @@ export default function ProfilePage() {
               </div>
             )}
             <div className="profile-field">
-              <label className="profile-label">COLOR *</label>
-              <div className="profile-color-row">
-                <input className="profile-input profile-color-picker" type="color" value={itemColorHex} onChange={(e) => setItemColorHex(e.target.value)} />
-                <input className="profile-input" type="text" placeholder="Color name (e.g. Black, Off-White)" value={itemColorName} onChange={(e) => setItemColorName(e.target.value)} style={{ flex: 1 }} />
-              </div>
+              <label className="profile-label">COLORS ({itemColors.length}) *</label>
+              {itemColors.map((color, ci) => (
+                <div key={ci} className="profile-color-block">
+                  <div className="profile-color-block-header">
+                    <span className="profile-color-block-label">COLOR {ci + 1}</span>
+                    <button type="button" className="profile-color-remove-btn" onClick={() => removeColorBlock(ci)}>×</button>
+                  </div>
+                  <div className="profile-color-row">
+                    <input className="profile-input profile-color-picker" type="color" value={color.hex} onChange={(e) => updateColor(ci, "hex", e.target.value)} />
+                    <input className="profile-input" type="text" placeholder="Color name" value={color.name} onChange={(e) => updateColor(ci, "name", e.target.value)} style={{ flex: 1 }} />
+                  </div>
+                  <div className="profile-color-images">
+                    {color.previews.map((prev, ii) => {
+                      const fi = flatImageIndex(ci, ii);
+                      return (
+                        <div key={ii} className={`profile-color-image-preview ${itemThumbnailIndex === fi ? "is-thumbnail" : ""}`}>
+                          <img src={prev} alt="" />
+                          <button type="button" className="profile-image-thumb-btn" onClick={() => setItemThumbnailIndex(fi)} title="Set as thumbnail">
+                            {itemThumbnailIndex === fi ? "THUMBNAIL" : "THUMB"}
+                          </button>
+                          <button type="button" className="profile-image-remove" onClick={() => removeColorImage(ci, ii)}>×</button>
+                        </div>
+                      );
+                    })}
+                    <label className="profile-color-image-add">
+                      <span>+</span>
+                      <input type="file" accept="image/*" hidden multiple onChange={(e) => addColorImages(ci, e.target.files)} />
+                    </label>
+                  </div>
+                </div>
+              ))}
+              <button type="button" className="profile-add-color-btn" onClick={addColorBlock}>
+                + ADD COLOR
+              </button>
             </div>
             <div className="profile-field">
               <label className="profile-label">SELLER COUNTRY *</label>
@@ -649,7 +893,13 @@ export default function ProfilePage() {
                 ))}
                 <label className="profile-file-btn">
                   + UPLOAD .glb
-                  <input ref={shoeFileInputRef} type="file" accept=".glb,.gltf" hidden multiple onChange={handleShoeModelUpload} />
+                  <input ref={shoeFileInputRef} type="file" accept=".glb,.gltf" hidden multiple onChange={(e) => {
+                    const files = Array.from(e.target.files);
+                    Promise.all(files.map(async (f) => ({
+                      name: f.name,
+                      url: await convertFileToDataURL(f),
+                    }))).then((models) => setItemShoeModels((prev) => [...prev, ...models]));
+                  }} />
                 </label>
               </div>
             )}
@@ -662,24 +912,13 @@ export default function ProfilePage() {
                 </div>
               </div>
             )}
-            <div className="profile-field">
-              <label className="profile-label">PHOTOS ({itemImages.length}/10)</label>
-              <div className="profile-image-grid">
-                {itemImagePreviews.map((prev, i) => (
-                  <div key={i} className="profile-image-preview">
-                    <img src={prev} alt="" />
-                    <button type="button" className="profile-image-remove" onClick={() => removeItemImage(i)}>×</button>
-                  </div>
-                ))}
-                {itemImages.length < 10 && (
-                  <label className="profile-image-add">
-                    <span>+</span>
-                    <input ref={fileInputRef} type="file" accept="image/*" hidden multiple onChange={handleItemImagesUpload} />
-                  </label>
-                )}
+            {totalImages() > 0 && (
+              <div className="profile-field">
+                <label className="profile-label">ALL PHOTOS ({totalImages()})</label>
+                <div className="profile-field-note">Images are grouped by color</div>
               </div>
-            </div>
-            <button type="submit" className="profile-submit-btn">POST ITEM</button>
+            )}
+            <button type="submit" className="profile-submit-btn">{editingItem ? "UPDATE ITEM" : "POST ITEM"}</button>
           </form>
         </div>
       </div>

@@ -1,30 +1,16 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import Image from "next/image";
 import "./itempagehorizontal.css";
 import HorizontalScrollBar from "./HorizontalScrollBar";
 import ItemMenu from "./ItemMenu";
 import BuyMenuItemMenu from "./buymenuitemmenu";
+import { getItemById, seedDefaultItem } from "../profile/profileService";
 
-const allItemImages = [
-  "/imgs/presetitemimg1.webp",
-  "/imgs/presetitemimg2.webp",
-  "/imgs/presetitemimg3.webp",
-  "/imgs/presetitemimg4.webp",
-  "/imgs/presetitemimg5.webp",
-  "/imgs/presetitemimg6.webp",
-  "/imgs/presetitemimg1.webp",
-  "/imgs/presetitemimg2.webp",
-  "/imgs/presetitemimg3.webp",
-  "/imgs/presetitemimg4.webp",
-  "/imgs/presetitemimg5.webp",
-  "/imgs/presetitemimg6.webp",
-];
-
-export default function ItemPageHorizontal() {
+export default function ItemPageHorizontal({ id }) {
   const scrollRef = useRef(null);
-  const [displayImages, setDisplayImages] = useState(allItemImages.slice(0, 5));
+  const [item, setItem] = useState(null);
+  const [displayImages, setDisplayImages] = useState([]);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [zoomedIndex, setZoomedIndex] = useState(null);
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
@@ -32,6 +18,18 @@ export default function ItemPageHorizontal() {
   const slideRefs = useRef([]);
   const zoomRef = useRef(null);
   const zoomTextRef = useRef(null);
+
+  useEffect(() => {
+    if (id) {
+      seedDefaultItem();
+      const found = getItemById(id);
+      if (found) {
+        setItem(found);
+        const all = (found.colors || []).flatMap((c) => c.images || []);
+        setDisplayImages(all.length > 0 ? all : found.images || []);
+      }
+    }
+  }, [id]);
 
   useEffect(() => {
     const container = scrollRef.current;
@@ -93,16 +91,16 @@ export default function ItemPageHorizontal() {
     <div 
       className="horizontal-slider-wrapper"
     >
-      <ItemMenu />
+      <ItemMenu item={item} />
       <HorizontalScrollBar scrollRef={scrollRef} />
-      <BuyMenuItemMenu />
+      <BuyMenuItemMenu item={item} />
       <div className="horizontal-slider" ref={scrollRef}
         onMouseLeave={() => {
           setZoomedIndex(null);
           setHoveredIndex(null);
         }}
       >
-        {displayImages.map((src, index) => (
+        {displayImages.length > 0 ? displayImages.slice(0, 5).map((src, index) => (
           <div
             key={index}
             className="horizontal-slide"
@@ -111,15 +109,18 @@ export default function ItemPageHorizontal() {
             onMouseMove={(e) => handleMouseMove(e, index)}
             onClick={() => handleClick(index)}
           >
-            <Image
+            <img
               src={src}
               alt={`item-${index}`}
-              fill
               className="horizontal-slide-image"
-              sizes="(max-width: 768px) 100vw, 640px"
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
           </div>
-        ))}
+        )) : (
+          <div style={{ width: 640, height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#999" }}>
+            {id ? "ITEM NOT FOUND" : "NO ITEM SELECTED"}
+          </div>
+        )}
       </div>
       {hoveredIndex !== null && (
         <div

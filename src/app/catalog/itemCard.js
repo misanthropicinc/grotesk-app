@@ -8,7 +8,7 @@ import { getSession } from "../auth/authService";
 import { addToCart } from "../cart/cartService";
 import { showNotification } from "../notify";
 
-export default function ItemCard({ title, brand, price, image }) {
+export default function ItemCard({ title, brand, price, image, collection, postedByRole, postedByName, id }) {
   const [showMenu, setShowMenu] = useState(false);
   const [confirmClick, setConfirmClick] = useState(false);
 
@@ -46,10 +46,14 @@ export default function ItemCard({ title, brand, price, image }) {
       </div>
       <div className="item-card-info">
         <div className="item-card-content-top">
-          <Link href={confirmClick || !hasData ? "/item" : "#"} onClick={(e) => { if (!confirmClick && !hasData) { e.preventDefault(); handleClick(); } }} className="item-card-link-area">
+          <Link href={confirmClick || !hasData ? "#" : id ? `/item?id=${id}` : "/item"} onClick={(e) => { if (!confirmClick && !hasData) { e.preventDefault(); handleClick(); } }} className="item-card-link-area">
             <div className="item-card-brand-text">
               <p className="item-card-item-title">{hasData ? title : (confirmClick ? "CLICK AGAIN" : "ITEM TITLE")}</p>
               <p className="item-card-brand-title">{hasData ? brand : "BRAND TITLE"}</p>
+              {postedByRole === "designer" && postedByName && (
+                <p className="item-card-designer-label">BY {postedByName.toUpperCase()}</p>
+              )}
+              {collection && <p className="item-card-collection-label">{collection}</p>}
             </div>
             <p className="item-card-item-price">{hasData ? `$${parseFloat(price).toLocaleString()}` : "$69420.00"}</p>
           </Link>

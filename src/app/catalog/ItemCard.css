@@ -85,3 +85,17 @@
   font-size: 16px;
   font-weight: 200;
 }
+
+.item-card-designer-label {
+  font-size: 10px;
+  color: #101010;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.item-card-collection-label {
+  font-size: 9px;
+  color: #666;
+  font-weight: 300;
+  margin-top: 1px;
+}

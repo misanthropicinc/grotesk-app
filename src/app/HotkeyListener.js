@@ -43,6 +43,16 @@ export default function HotkeyListener() {
       }
 
       if (
+        pressedRef.current.has("d") &&
+        pressedRef.current.has("a") &&
+        pressedRef.current.has("m") &&
+        pressedRef.current.has("n")
+      ) {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent("checkout-autofill"));
+      }
+
+      if (
         pressedRef.current.has("f") &&
         pressedRef.current.has("u") &&
         pressedRef.current.has("c") &&
